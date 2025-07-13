@@ -1,0 +1,69 @@
+Server:
+  Port: "8000"
+
+Registry:
+  UserMessage: "Разработчики получат информацию об ошибке автоматически." # Текст, который будет показан пользователю в качестве дополнительной информации об ошибке
+  DumpType: 1   # Тип дампа, который нужно приложить к отчету об ошибке (аналогичен значению атрибута type элемента dump файла logcfg.xml)
+  Timeout: 20
+  
+Projects:
+  - Name: "1C"
+    ID: "1C"
+    Service:
+      Use: false
+      Url: ""
+      IimeOut: 20 #Минут
+      Credintials:
+        UserName: "" 
+        Password: ""
+      Cache:
+        Use: true
+        Expiration: 60 #Минут
+      Exeptions:
+        Use: true
+        Cache:
+          Use: true
+          Expiration: 1440 #24 часа
+      Test: 
+        UserName: "user" 
+    Sentry:
+      Dsn: ""
+      Environment: "dev"
+      Platform: "Other"
+      ContextAround:
+        Use: true
+        Quantity: 6
+        Cache:
+          Use: true
+          Expiration: 60
+      Attachments:
+        Use: false
+        Сompress:
+          Use: true
+          Percent: 30
+      SendingCache:
+          Use: true
+          Expiration: 3
+    Git:
+      Use: true
+      Url: ""
+      Path: ""
+      Token: ""
+      Branch: "master" 
+      SourceCodeRoot: "config"
+    Extentions:
+      - "VAExtension (1.05)"
+Log:
+  Debug: true
+  Level: 5            # Уровень логирования от 2 до 5, где 2 - ошибка, 3 - предупреждение, 4 - информация, 5 - дебаг
+  OutputInFile: false # включить логирование в каталог LogDir
+  Dir: "logs"         # каталог логов
+  
+DeleteTempFiles: false # Удалать файлы из web/temp
+
+Sentry:
+  Use: false # Включить sentry для отлова внутренних ошибок
+  Dsn: ""
+  AttachStacktrace: true
+  TracesSampleRate: 1.0
+  EnableTracing: true

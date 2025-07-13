@@ -1,0 +1,40 @@
+{
+  "FixedFileInfo": {
+    "FileVersion": {
+      "Major": 1,
+      "Minor": 5,
+      "Patch": 0,
+      "Build": 0
+    },
+    "FileFlagsMask": "3f",
+    "FileFlags": "00",
+    "FileOS": "040004",
+    "FileType": "01",
+    "FileSubType": "00"
+  },
+  "StringFileInfo": {
+    "ProductVersion": "1.5.0",
+    "CompanyName": "Vozovoz",
+    "FileDescription": "API Service",
+    "InternalName": "catcher",
+    "LegalCopyright": "© 2025 Vozovoz",
+    "LegalTrademarks": "",
+    "OriginalFilename": "catcher.exe",
+    "PrivateBuild": "",
+    "ProductName": "Catcher API Service",
+    "SpecialBuild": "",
+    "Comments": ""
+  },
+  "VarFileInfo": {
+    "Translation": {
+      "LangID": 1049,
+      "CharsetID": 1200
+    }
+  },
+  "IconPath": "icon.ico",
+  "Manifest": {
+    "ExecutionLevel": "asInvoker",
+    "UIAccess": false,
+    "DPI_Awareness": "PerMonitorV2"
+  }
+}

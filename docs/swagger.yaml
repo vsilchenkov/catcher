@@ -1,0 +1,762 @@
+basePath: /api
+definitions:
+  app_internal_handler.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  catcher_app_internal_models.Event:
+    properties:
+      breadcrumbs:
+        items:
+          $ref: '#/definitions/sentry.Breadcrumb'
+        type: array
+      check_in:
+        $ref: '#/definitions/sentry.CheckIn'
+      contexts:
+        additionalProperties:
+          $ref: '#/definitions/sentry.Context'
+        type: object
+      debug_meta:
+        $ref: '#/definitions/sentry.DebugMeta'
+      dist:
+        type: string
+      environment:
+        type: string
+      event_id:
+        type: string
+      exception:
+        $ref: '#/definitions/catcher_app_internal_models.Exception'
+      extra:
+        additionalProperties: true
+        type: object
+      fingerprint:
+        items:
+          type: string
+        type: array
+      level:
+        $ref: '#/definitions/sentry.Level'
+      logger:
+        type: string
+      message:
+        type: string
+      modules:
+        additionalProperties:
+          type: string
+        type: object
+      monitor_config:
+        $ref: '#/definitions/sentry.MonitorConfig'
+      platform:
+        type: string
+      release:
+        type: string
+      request: {}
+      sdk:
+        $ref: '#/definitions/sentry.SdkInfo'
+      server_name:
+        type: string
+      spans:
+        items:
+          $ref: '#/definitions/sentry.Span'
+        type: array
+      start_timestamp:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      threads:
+        items:
+          $ref: '#/definitions/sentry.Thread'
+        type: array
+      timestamp:
+        type: string
+      transaction:
+        type: string
+      transaction_info:
+        $ref: '#/definitions/sentry.TransactionInfo'
+      type:
+        type: string
+      user:
+        $ref: '#/definitions/sentry.User'
+    type: object
+  catcher_app_internal_models.Exception:
+    properties:
+      values:
+        items:
+          $ref: '#/definitions/catcher_app_internal_models.ExceptionValue'
+        type: array
+    type: object
+  catcher_app_internal_models.ExceptionValue:
+    properties:
+      stacktrace:
+        $ref: '#/definitions/catcher_app_internal_models.Stacktrace'
+      type:
+        type: string
+      value:
+        type: string
+    type: object
+  catcher_app_internal_models.Frame:
+    properties:
+      abs_path:
+        type: string
+      context_line:
+        type: string
+      filename:
+        type: string
+      function:
+        type: string
+      in_app:
+        type: boolean
+      lineno:
+        type: integer
+      module:
+        type: string
+      module_abs:
+        type: string
+      stack_start:
+        type: boolean
+    type: object
+  catcher_app_internal_models.RegistryInfo:
+    properties:
+      dumpType:
+        type: integer
+      needSendReport:
+        type: boolean
+      userMessage:
+        type: string
+    type: object
+  catcher_app_internal_models.RegistryInput:
+    properties:
+      ErrorCategories:
+        items:
+          type: string
+        type: array
+      appName:
+        type: string
+      appStackHash:
+        type: string
+      appVersion:
+        type: string
+      clientID:
+        type: string
+      clientStackHash:
+        type: string
+      configHash:
+        type: string
+      configName:
+        type: string
+      configVersion:
+        type: string
+      configurationInterfaceLanguageCode:
+        type: string
+      platformInterfaceLanguageCode:
+        type: string
+      platformType:
+        type: string
+      reportID:
+        type: string
+    required:
+    - configName
+    type: object
+  catcher_app_internal_models.RegistryPushReportResult:
+    properties:
+      eventID:
+        type: string
+      id:
+        type: string
+    type: object
+  catcher_app_internal_models.SendEventResult:
+    properties:
+      eventID:
+        type: string
+      id:
+        type: string
+    type: object
+  catcher_app_internal_models.Stacktrace:
+    properties:
+      frames:
+        items:
+          $ref: '#/definitions/catcher_app_internal_models.Frame'
+        type: array
+    type: object
+  sentry.Breadcrumb:
+    properties:
+      category:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      level:
+        $ref: '#/definitions/sentry.Level'
+      message:
+        type: string
+      timestamp:
+        type: string
+      type:
+        type: string
+    type: object
+  sentry.CheckIn:
+    properties:
+      check_in_id:
+        description: Check-In ID (unique and client generated)
+        type: string
+      duration:
+        allOf:
+        - $ref: '#/definitions/time.Duration'
+        description: The duration of the check-in. Will only take effect if the status
+          is ok or error.
+      monitor_slug:
+        description: The distinct slug of the monitor.
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/sentry.CheckInStatus'
+        description: The status of the check-in.
+    type: object
+  sentry.CheckInStatus:
+    enum:
+    - in_progress
+    - ok
+    - error
+    type: string
+    x-enum-varnames:
+    - CheckInStatusInProgress
+    - CheckInStatusOK
+    - CheckInStatusError
+  sentry.Context:
+    additionalProperties: true
+    type: object
+  sentry.DebugMeta:
+    properties:
+      images:
+        items:
+          $ref: '#/definitions/sentry.DebugMetaImage'
+        type: array
+      sdk_info:
+        $ref: '#/definitions/sentry.DebugMetaSdkInfo'
+    type: object
+  sentry.DebugMetaImage:
+    properties:
+      arch:
+        description: macho,elf,pe
+        type: string
+      code_file:
+        description: macho,elf,pe,wasm,sourcemap
+        type: string
+      code_id:
+        description: macho,elf,pe,wasm
+        type: string
+      debug_file:
+        description: macho,elf,pe,wasm
+        type: string
+      debug_id:
+        description: macho,elf,pe,wasm,sourcemap
+        type: string
+      image_addr:
+        description: macho,elf,pe
+        type: string
+      image_size:
+        description: macho,elf,pe
+        type: integer
+      image_vmaddr:
+        description: macho,elf,pe
+        type: string
+      type:
+        description: all
+        type: string
+      uuid:
+        description: proguard
+        type: string
+    type: object
+  sentry.DebugMetaSdkInfo:
+    properties:
+      sdk_name:
+        type: string
+      version_major:
+        type: integer
+      version_minor:
+        type: integer
+      version_patchlevel:
+        type: integer
+    type: object
+  sentry.Exception:
+    properties:
+      mechanism:
+        $ref: '#/definitions/sentry.Mechanism'
+      module:
+        type: string
+      stacktrace:
+        $ref: '#/definitions/sentry.Stacktrace'
+      thread_id:
+        type: integer
+      type:
+        description: used as the main issue title
+        type: string
+      value:
+        description: used as the main issue subtitle
+        type: string
+    type: object
+  sentry.Frame:
+    properties:
+      abs_path:
+        type: string
+      addr_mode:
+        type: string
+      colno:
+        type: integer
+      context_line:
+        type: string
+      filename:
+        type: string
+      function:
+        type: string
+      image_addr:
+        type: string
+      in_app:
+        type: boolean
+      instruction_addr:
+        type: string
+      lineno:
+        type: integer
+      module:
+        description: |-
+          Module is, despite the name, the Sentry protocol equivalent of a Go
+          package's import path.
+        type: string
+      package:
+        description: |-
+          Package and the below are not used for Go stack trace frames.  In
+          other platforms it refers to a container where the Module can be
+          found.  For example, a Java JAR, a .NET Assembly, or a native
+          dynamic library.  They exists for completeness, allowing the
+          construction and reporting of custom event payloads.
+        type: string
+      platform:
+        type: string
+      post_context:
+        items:
+          type: string
+        type: array
+      pre_context:
+        items:
+          type: string
+        type: array
+      stack_start:
+        type: boolean
+      symbol:
+        type: string
+      symbol_addr:
+        type: string
+      vars:
+        additionalProperties: true
+        type: object
+    type: object
+  sentry.Level:
+    enum:
+    - debug
+    - info
+    - warning
+    - error
+    - fatal
+    type: string
+    x-enum-varnames:
+    - LevelDebug
+    - LevelInfo
+    - LevelWarning
+    - LevelError
+    - LevelFatal
+  sentry.Mechanism:
+    properties:
+      data:
+        additionalProperties: {}
+        type: object
+      description:
+        type: string
+      exception_id:
+        type: integer
+      handled:
+        type: boolean
+      help_link:
+        type: string
+      is_exception_group:
+        type: boolean
+      parent_id:
+        type: integer
+      source:
+        type: string
+      type:
+        type: string
+    type: object
+  sentry.MonitorConfig:
+    properties:
+      checkin_margin:
+        description: |-
+          The allowed margin of minutes after the expected check-in time that
+          the monitor will not be considered missed for.
+        type: integer
+      failure_issue_threshold:
+        description: The number of consecutive failed check-ins it takes before an
+          issue is created.
+        type: integer
+      max_runtime:
+        description: |-
+          The allowed duration in minutes that the monitor may be `in_progress`
+          for before being considered failed due to timeout.
+        type: integer
+      recovery_threshold:
+        description: The number of consecutive OK check-ins it takes before an issue
+          is resolved.
+        type: integer
+      schedule: {}
+      timezone:
+        description: |-
+          A tz database string representing the timezone which the monitor's execution schedule is in.
+          See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+        type: string
+    type: object
+  sentry.Request:
+    properties:
+      cookies:
+        type: string
+      data:
+        type: string
+      env:
+        additionalProperties:
+          type: string
+        type: object
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        type: string
+      query_string:
+        type: string
+      url:
+        type: string
+    type: object
+  sentry.SdkInfo:
+    properties:
+      integrations:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      packages:
+        items:
+          $ref: '#/definitions/sentry.SdkPackage'
+        type: array
+      version:
+        type: string
+    type: object
+  sentry.SdkPackage:
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+    type: object
+  sentry.Span:
+    properties:
+      data:
+        additionalProperties: true
+        type: object
+      description:
+        type: string
+      name:
+        type: string
+      op:
+        type: string
+      origin:
+        type: string
+      parent_span_id:
+        items:
+          type: integer
+        type: array
+      span_id:
+        items:
+          type: integer
+        type: array
+      start_timestamp:
+        type: string
+      status:
+        $ref: '#/definitions/sentry.SpanStatus'
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      timestamp:
+        type: string
+      trace_id:
+        items:
+          type: integer
+        type: array
+    type: object
+  sentry.SpanStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    type: integer
+    x-enum-varnames:
+    - SpanStatusUndefined
+    - SpanStatusOK
+    - SpanStatusCanceled
+    - SpanStatusUnknown
+    - SpanStatusInvalidArgument
+    - SpanStatusDeadlineExceeded
+    - SpanStatusNotFound
+    - SpanStatusAlreadyExists
+    - SpanStatusPermissionDenied
+    - SpanStatusResourceExhausted
+    - SpanStatusFailedPrecondition
+    - SpanStatusAborted
+    - SpanStatusOutOfRange
+    - SpanStatusUnimplemented
+    - SpanStatusInternalError
+    - SpanStatusUnavailable
+    - SpanStatusDataLoss
+    - SpanStatusUnauthenticated
+    - maxSpanStatus
+  sentry.Stacktrace:
+    properties:
+      frames:
+        items:
+          $ref: '#/definitions/sentry.Frame'
+        type: array
+      frames_omitted:
+        items:
+          type: integer
+        type: array
+    type: object
+  sentry.Thread:
+    properties:
+      crashed:
+        type: boolean
+      current:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      stacktrace:
+        $ref: '#/definitions/sentry.Stacktrace'
+    type: object
+  sentry.TransactionInfo:
+    properties:
+      source:
+        $ref: '#/definitions/sentry.TransactionSource'
+    type: object
+  sentry.TransactionSource:
+    enum:
+    - custom
+    - url
+    - route
+    - view
+    - component
+    - task
+    type: string
+    x-enum-varnames:
+    - SourceCustom
+    - SourceURL
+    - SourceRoute
+    - SourceView
+    - SourceComponent
+    - SourceTask
+  sentry.User:
+    properties:
+      data:
+        additionalProperties:
+          type: string
+        type: object
+      email:
+        type: string
+      id:
+        type: string
+      ip_address:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+host: localhost:8000
+info:
+  contact: {}
+  description: Catcher API Service
+  title: Catcher
+  version: "1.0"
+paths:
+  /api/prj/:id/sendEvent:
+    post:
+      consumes:
+      - application/json
+      description: Отправка Event в Sentry
+      operationId: sendEvent
+      parameters:
+      - description: Данные события
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/catcher_app_internal_models.Event'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/catcher_app_internal_models.SendEventResult'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Send Event
+      tags:
+      - Event
+  /api/reg:
+    get:
+      description: Проверка работы метода getInfo
+      operationId: getInfo
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/catcher_app_internal_models.RegistryInfo'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Get Info
+      tags:
+      - info
+  /api/reg/getInfo:
+    post:
+      consumes:
+      - application/json
+      description: Получение информации для отчета об ошибки
+      operationId: getInfoPost
+      parameters:
+      - description: Значения для отчета об ошибке
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/catcher_app_internal_models.RegistryInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/catcher_app_internal_models.RegistryInfo'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Get Info Post
+      tags:
+      - Info
+  /api/reg/pushReport:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Отправка отчета об ошибки
+      operationId: pushReport
+      parameters:
+      - description: Файл в архиве формата https://its.1c.ru/db/v8327doc#bookmark:dev:TI000002558
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/catcher_app_internal_models.RegistryPushReportResult'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Push Report
+      tags:
+      - Report
+  /api/service/clearCache:
+    get:
+      description: Очищает все данные, сохранённые в кэше
+      operationId: clearCache
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Clear cache
+      tags:
+      - Cache
+swagger: "2.0"

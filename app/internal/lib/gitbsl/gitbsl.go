@@ -7,8 +7,6 @@ import (
 )
 
 const (
-	ExtProcessing = "ВнешняяОбработка"
-	ExtReport     = "ВнешнийОтчет"
 	Expansion     = "bsl"
 	PathSeparator = "/"
 )
@@ -24,7 +22,16 @@ type Path struct {
 }
 
 func IsExternalModule(m string) bool {
-	return strings.HasPrefix(m, ExtProcessing) || strings.HasPrefix(m, ExtReport)
+
+	for _, t := range externalTypes() {
+
+		if strings.HasPrefix(m, t) {
+			return true
+		}
+
+	}
+
+	return false
 }
 
 func IsExpansion(m string) bool {
@@ -59,6 +66,7 @@ func (p Path) AbsPath() (string, error) {
 	parts := strings.Split(path, ".")
 	lenParts := len(parts)
 	position := 0
+	mPathAdded := false
 
 	for _, segment := range parts {
 
@@ -72,12 +80,14 @@ func (p Path) AbsPath() (string, error) {
 				return "", errors.New("базовый путь не определен")
 			}
 			paths = append(paths, base)
-			modules = p.addModulesPath(modules, segment, false)
+			modules, mPathAdded = p.addModulesPath(modules, segment, false)
 
 		case 2: //Имя объекта метаданных
 
 			paths = append(paths, segment)
-			modules = p.addModulesPath(modules, segment, false)
+			if !mPathAdded {
+				modules, mPathAdded = p.addModulesPath(modules, segment, false)
+			}
 
 		case 3: //Форма, команда, модуль объекта, модуль менеджера,
 
@@ -89,12 +99,16 @@ func (p Path) AbsPath() (string, error) {
 				}
 			}
 
-			modules = p.addModulesPath(modules, segment, false)
+			if !mPathAdded {
+				modules, mPathAdded = p.addModulesPath(modules, segment, false)
+			}
 
 		case 4: //Имя формы, имя команды
 
 			paths = append(paths, segment)
-			modules = p.addModulesPath(modules, segment, false)
+			if !mPathAdded {
+				modules, mPathAdded = p.addModulesPath(modules, segment, false)
+			}
 
 		}
 	}
@@ -153,12 +167,13 @@ func (p Path) translateObjectName(base string, warn bool) string {
 	}
 	return result
 }
-func (p Path) addModulesPath(pathModules []string, name string, warn bool) []string {
+
+func (p Path) addModulesPath(pathModules []string, name string, warn bool) ([]string, bool) {
 
 	const op = "gitbsl.addPartPathModulesGit"
 
 	if name == "" {
-		return pathModules
+		return pathModules, false
 	}
 
 	modules, ok := mapModulesPath()[name]
@@ -170,12 +185,11 @@ func (p Path) addModulesPath(pathModules []string, name string, warn bool) []str
 				p.Logger.Str("value", p.Value),
 				p.Logger.Err(errors.New("имя модуля не найдено в mapModulesPath")))
 		}
-		return pathModules
+		return pathModules, ok
 	}
 
 	pathModules = append(pathModules, modules...)
-
-	return pathModules
+	return pathModules, ok
 
 }
 
@@ -265,4 +279,13 @@ func mapModulesPath() map[string][]string {
 		"Команда":                      {"Ext", "CommandModule"},
 	}
 
+}
+
+func externalTypes() []string {
+	return []string{
+		"ВнешняяОбработка",
+		"ВнешнийОтчет",
+		"mngbase",
+		"mngcore",
+	}
 }

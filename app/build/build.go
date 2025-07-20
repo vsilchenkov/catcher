@@ -9,7 +9,7 @@ import (
 
 const ProjectName = "Cather"
 
-var Version = "1.5.0"
+var Version = "1.5.4"
 
 var Time string
 var User string

@@ -3,7 +3,7 @@
     "FileVersion": {
       "Major": 1,
       "Minor": 5,
-      "Patch": 3,
+      "Patch": 4,
       "Build": 0
     },
     "FileFlagsMask": "3f",
@@ -13,7 +13,7 @@
     "FileSubType": "00"
   },
   "StringFileInfo": {
-    "ProductVersion": "1.5.0",
+    "ProductVersion": "1.5.4",
     "CompanyName": "Vozovoz",
     "FileDescription": "API Service",
     "InternalName": "catcher",

@@ -125,9 +125,11 @@ func (r Report) exceptionMessage() []string {
 	// текст ошибки на втором уровне
 	for _, v := range errorInfo {
 		if len(v) > 0 {
-			result = append(result, fmt.Sprintf("%v", v[0]))
+			e := strings.TrimSpace(fmt.Sprintf("%v", v[0]))
+			if e != "" {
+				result = append(result, e)
+			}
 		}
-
 	}
 
 	return result
@@ -161,7 +163,7 @@ func fileNameByModule(m string, isExternal bool) string {
 }
 
 func contextByFunction(f string) string {
-	return  strings.TrimSpace(f)
+	return strings.TrimSpace(f)
 	// part := strings.Split(f, ".")
 	// return part[len(part)-1]
 }

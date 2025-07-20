@@ -46,7 +46,12 @@ func NewPath(value string, sourceCodeRoot string, logger logging.Logger) Path {
 
 func (p Path) AbsPath() (string, error) {
 
-	path := strings.TrimSpace(p.Value)
+	value := p.Value
+	if value == "" {
+		return "", nil
+	}
+
+	path := strings.TrimSpace(value)
 
 	paths := make([]string, 0)
 	modules := make([]string, 0)

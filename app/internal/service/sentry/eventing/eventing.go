@@ -55,7 +55,18 @@ func (s *Service) generateKey() bool {
 	var key string
 	for _, f := range frames {
 		if f.StackStart {
-			key = fmt.Sprintf("%s:%d", f.Module, f.Lineno)
+			
+			var m string
+			switch {
+			case f.AbsPath != "":
+				m = f.AbsPath
+			case f.Module != "":
+				m = f.Module
+			default:
+				m = f.Filename
+			}
+			
+			key = fmt.Sprintf("%s:%d", m, f.Lineno)
 		}
 	}
 
@@ -100,21 +111,36 @@ func (s *Service) EventNeedSend() bool {
 		}
 
 		s.Cacher.Set(s.Ctx, key, e, time.Duration(s.prj.Service.Exeptions.Cache.Expiration)*time.Minute)
-		exepts = e	
+		exepts = e
 
 	}
 
-	t := s.typeExeption()
+	t, v := s.valueExeption()
+
+	if t == "" && v == "" {
+		return true
+	}
+
+	s.Logger.Debug("Поиск значения в списке пропускаемых исключений",
+		s.Logger.Str("type", t),
+		s.Logger.Str("value", v))
 
 	for _, e := range exepts {
 
-		if strings.Contains(t, e) {
-			s.Logger.Debug("Найдено значение в списке пропукаемых исключений",
-				s.Logger.Str("value", t),
+		if t != "" && strings.Contains(t, e) {
+			s.Logger.Debug("Найдено значение (type) в списке пропускаемых исключений",
+				s.Logger.Str("type", t),
 				s.Logger.Str("exept", e))
 			return false
 		}
-		
+
+		if v != "" && strings.Contains(v, e) {
+			s.Logger.Debug("Найдено значение (value) в списке пропускаемых исключений",
+				s.Logger.Str("value", v),
+				s.Logger.Str("exept", e))
+			return false
+		}
+
 	}
 
 	return true
@@ -168,15 +194,13 @@ func (s *Service) keySending() string {
 	return fmt.Sprintf("%s:%s", opSending, s.key)
 }
 
-func (s *Service) typeExeption() string {
-
-	var value string
+func (s *Service) valueExeption() (string, string) {
 
 	for _, e := range s.event.Exception {
-		return e.Type
+		return e.Type, e.Value
 	}
 
-	return value
+	return "", ""
 }
 
 func opKey(ctx context.Context, op string) string {

@@ -3,22 +3,32 @@ package main
 import (
 	"catcher/app/build"
 	"catcher/app/internal/config"
+	"catcher/app/internal/handler"
 	"catcher/app/internal/lib/caching"
 	"catcher/app/internal/lib/caching/memory"
-	"catcher/app/internal/lib/logging"
+	"catcher/app/internal/lib/caching/redis"
 	"catcher/app/internal/models"
 	"catcher/app/internal/server"
 	"catcher/app/internal/server/http"
+	"catcher/app/internal/service"
+	"catcher/pkg/errors"
+	"catcher/pkg/logging"
 	"context"
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/kardianos/service"
-	"github.com/cockroachdb/errors"
+	"github.com/jinzhu/copier"
+	svc "github.com/kardianos/service"
 )
+
+const projectName = "Cather"
+
+//go:embed versioninfo.json
+var versionInfoData []byte
 
 // @title Catcher
 // @version 1.0
@@ -29,43 +39,45 @@ import (
 func main() {
 
 	ctx := context.Background()
-	name := build.ProjectName
 
-	svcConfig := &service.Config{
-		Name:        name + "Service",
-		DisplayName: name + " API Service",
-		Description: "API-приложение " + name,
+	svcConfig := &svc.Config{
+		Name:        projectName + "Service",
+		DisplayName: projectName + " API Service",
+		Description: "API-приложение " + projectName,
 	}
 
-	flags := config.ParseFlags()
-	c, err := config.LoadSettigs(flags)
+	b, err := build.NewOption(versionInfoData)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if c.Sentry.Use {
-		err = sentry.Init(logging.SentryClientOptions(c))
+	c := config.New(*b)
+	flags := config.ParseFlags()
+	err = config.LoadSettigs(flags, c)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	sentryConfig := &logging.SentryConfig{}
+	copier.Copy(sentryConfig, c.Option)
+	copier.Copy(sentryConfig, c.Sentry)
+
+	if sentryConfig.Use {
+		err = sentry.Init(logging.SentryClientOptions(sentryConfig))
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer sentry.Flush(2 * time.Second)
 	}
 
-	logger := logging.Initlogger(c)
+	logConfig := &logging.Config{}
+	copier.Copy(logConfig, c.Option)
+	copier.Copy(logConfig, c.Log)
+	logger := logging.Initlogger(logConfig, sentryConfig)
 	defer func() {
-		if r := recover(); r != nil {
-			var err error
-			switch e := r.(type) {
-			case error:
-				err = e
-			case string:
-				err = errors.New(e)
-			default:
-				err = fmt.Errorf("panic: %v", e)
-			}
-
-			err = errors.WithStackDepth(err,2)
+		if err := errors.PanicRecovered(recover()); err != nil {
 			logger.Error("Panic recovered",
 				logger.Err(err),
 			)
@@ -73,14 +85,37 @@ func main() {
 		}
 	}()
 
-	cacher := memory.New()
-	svcCacher := caching.New(cacher)
+	var svcCacher caching.Cacher
+	useMemory := true
+	if c.Redis.Use {
+		cacher, err := redis.New(&redis.Option{
+			Addr:     c.Redis.Addr,
+			Username: c.Redis.Credintials.UserName,
+			Password: c.Redis.Credintials.Password,
+			DB:       c.Redis.DB,
+		})
+		if err == nil {
+			svcCacher = caching.New(cacher)
+			useMemory = false
+		} else {
+			logger.Error("Failed to initialize Redis cacher",
+				logger.Err(err))
+		}
+	}
+
+	if useMemory {
+		cacher := memory.New()
+		svcCacher = caching.New(cacher)
+	}
 
 	appCtx := models.NewAppContext(ctx, c, svcCacher, logger)
 	srv := http.New(appCtx)
-	prg := server.NewProgram(srv, appCtx)
 
-	s, err := service.New(prg, svcConfig)
+	service := service.New(appCtx)
+	handler := handler.New(service, appCtx).Init()
+	prg := server.NewProgram(srv, handler, appCtx)
+
+	s, err := svc.New(prg, svcConfig)
 	if err != nil {
 		logger.Error("Error on service start",
 			logger.Err(err))

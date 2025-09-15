@@ -3,7 +3,7 @@ package models
 import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/lib/caching"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"context"
 )
 

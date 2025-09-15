@@ -1,14 +1,15 @@
 package gitbsl
 
 import (
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"errors"
 	"strings"
 )
 
 const (
-	Expansion     = "bsl"
-	PathSeparator = "/"
+	Expansion           = "bsl"
+	PathSeparator       = "/"
+	ExternalDataSources = "ВнешнийИсточникДанных"
 )
 
 type Config struct {
@@ -38,6 +39,10 @@ func IsExpansion(m string) bool {
 	return strings.Contains(m, " ") // имя расширения и путь к объекту разделяются пробелом
 }
 
+func IsExternalDataSources(m string) bool {
+	return strings.Contains(m, ExternalDataSources)
+}
+
 func NewConfig(sourceCodeRoot string) Config {
 	return Config{
 		SourceCodeRoot: sourceCodeRoot,
@@ -45,10 +50,14 @@ func NewConfig(sourceCodeRoot string) Config {
 }
 
 func NewPath(value string, sourceCodeRoot string, logger logging.Logger) Path {
-	return Path{
+
+	result := Path{
 		Config: NewConfig(sourceCodeRoot),
 		Value:  strings.TrimSpace(value),
 		Logger: logger}
+
+	// result.Value = "ВнешнийИсточникДанных.Шлюз.Таблица.PDT_PartialOperations.МодульМенеджера"
+	return result
 }
 
 func (p Path) AbsPath() (string, error) {
@@ -76,11 +85,14 @@ func (p Path) AbsPath() (string, error) {
 		case 1: //Базовый тип
 
 			base := p.translateBaseType(segment, true)
-			if base == "" {
+			if base != "" {
+				paths = append(paths, base)
+			}
+			modules, mPathAdded = p.addModulesPath(modules, segment, false)
+
+			if base == "" && len(modules) == 0 {
 				return "", errors.New("базовый путь не определен")
 			}
-			paths = append(paths, base)
-			modules, mPathAdded = p.addModulesPath(modules, segment, false)
 
 		case 2: //Имя объекта метаданных
 
@@ -197,6 +209,11 @@ func mapBasesTypes() map[string]string {
 
 	return map[string]string{
 
+		// корень, пропускаем
+		"МодульУправляемогоПриложения": "",
+		"МодульОбычногоприложения":     "",
+		"МодульСеанса":                 "",
+
 		"Подсистема":     "Subsystems",
 		"ОбщийМодуль":    "CommonModules",
 		"ПараметрСеанса": "SessionParameters",
@@ -249,6 +266,8 @@ func mapBasesTypes() map[string]string {
 
 		"БизнесПроцесс": "BusinessProcesses",
 		"Задача":        "Tasks",
+
+		"ВнешнийИсточникДанных": "ExternalDataSources",
 	}
 
 }
@@ -260,6 +279,7 @@ func mapObjectNames() map[string]string {
 		"Команда": "Commands",
 		"Форма":   "Forms",
 		"Макет":   "Templates",
+		"Таблица": "Tables",
 	}
 
 }
@@ -268,15 +288,18 @@ func mapModulesPath() map[string][]string {
 
 	return map[string][]string{
 		"МодульУправляемогоПриложения": {"Ext", "ManagedApplicationModule"},
+		"МодульОбычногоприложения":     {"Ext", "OrdinaryApplicationModule.bsl"},
 		"МодульСеанса":                 {"Ext", "SessionModule"},
 		"ОбщийМодуль":                  {"Ext", "Module"},
 		"HTTPСервис":                   {"Ext", "Module"},
 		"WebСервис":                    {"Ext", "Module"},
 		"СервисИнтеграции":             {"Ext", "Module"},
 		"МодульМенеджера":              {"Ext", "ManagerModule"},
+		"ВнешнийИсточникДанных":        {"Ext", "ManagerModule"},
 		"МодульОбъекта":                {"Ext", "ObjectModule"},
 		"Форма":                        {"Ext", "Form", "Module"},
 		"Команда":                      {"Ext", "CommandModule"},
+		"ОбщаяКоманда":                 {"Ext", "CommandModule"},
 	}
 
 }

@@ -8,10 +8,10 @@ import (
 
 	"catcher/app/build"
 
+	"github.com/cockroachdb/errors"
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
-	"github.com/cockroachdb/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,6 +34,16 @@ type Config struct {
 
 	Projects []Project `yaml:"Projects" validate:"required,dive"`
 
+	Redis struct {
+		Use         bool   `yaml:"Use"`
+		Addr        string `yaml:"Addr"`
+		DB          int    `yaml:"DB"`
+		Credintials struct {
+			UserName string `yaml:"UserName"`
+			Password string `yaml:"Password"`
+		} `yaml:"Credintials"`
+	} `yaml:"Redis"`
+
 	Log struct {
 		Debug        bool   `yaml:"Debug" binding:"required"`
 		Level        int    `yaml:"Level" binding:"required"`
@@ -46,9 +56,11 @@ type Config struct {
 	Sentry struct {
 		Use              bool    `yaml:"Use"`
 		Dsn              string  `yaml:"Dsn"`
+		Environment      string  `yaml:"Environment"`
 		AttachStacktrace bool    `yaml:"AttachStacktrace"`
 		TracesSampleRate float64 `yaml:"TracesSampleRate"`
 		EnableTracing    bool    `yaml:"EnableTracing"`
+		Debug            bool    `yaml:"Debug"`
 	} `yaml:"Sentry"`
 }
 
@@ -56,7 +68,7 @@ type flags struct {
 	configPath string
 }
 
-func newConfig(b build.Option) *Config {
+func New(b build.Option) *Config {
 	return &Config{
 		Option: b,
 	}
@@ -78,36 +90,33 @@ func ParseFlags() flags {
 
 }
 
-func LoadSettigs(flags flags) (*Config, error) {
+func LoadSettigs(flags flags, c *Config) error {
 
 	const op = "config.LoadSettigs"
 
-	b := build.NewOption()
-
 	path := flags.configPath
-	fullPath := filepath.Join(b.WorkingDir, path)
+	fullPath := filepath.Join(c.WorkingDir, path)
 
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return nil, errors.WithMessagef(err, "%s - файл настроек %q не найден", op, fullPath)
+		return errors.WithMessagef(err, "%s - файл настроек %q не найден", op, fullPath)
 	}
 	file, err := os.ReadFile(fullPath)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "%s - ошибка чтения файла %q", op, fullPath)
+		return errors.WithMessagef(err, "%s - ошибка чтения файла %q", op, fullPath)
 	}
 
-	c := newConfig(*b)
 	if err := yaml.Unmarshal(file, &c); err != nil {
-		return nil, errors.WithMessagef(err, "%s - ошибка десириализации настроек", op)
+		return errors.WithMessagef(err, "%s - ошибка десириализации настроек", op)
 	}
 
 	validate := validator.New()
 	err = validate.Struct(c)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "%s - ошибка валидации настроек", op)
+		return errors.WithMessagef(err, "%s - ошибка валидации настроек", op)
 	}
 
 	if err := defaults.Set(c); err != nil {
-		return nil, errors.WithMessagef(err, "%s - ошибка установки настроек по умолчанию", op)
+		return errors.WithMessagef(err, "%s - ошибка установки настроек по умолчанию", op)
 	}
 
 	if c.Registry.Timeout == 0 {
@@ -118,7 +127,7 @@ func LoadSettigs(flags flags) (*Config, error) {
 
 	fmt.Printf("Settings loaded: %s\n", fullPath)
 
-	return c, nil
+	return nil
 }
 
 func loadEnv(c *Config) {

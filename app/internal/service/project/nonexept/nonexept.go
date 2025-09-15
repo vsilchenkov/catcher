@@ -1,7 +1,7 @@
 package nonexept
 
 import (
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"context"
 	"encoding/json"
 	"io"

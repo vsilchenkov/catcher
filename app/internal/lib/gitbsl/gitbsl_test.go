@@ -66,6 +66,24 @@ func TestAbsPath(t *testing.T) {
 			wantErr:        false,
 		},
 		{
+			input:          "МодульУправляемогоПриложения",
+			sourceCodeRoot: "config",
+			wantPrefix:     "config/Ext/ManagedApplicationModule.bsl",
+			wantErr:        false,
+		},
+		{
+			input:          "ОбщаяКоманда.ВыгрузитьДанныеВФайл.МодульКоманды",
+			sourceCodeRoot: "config",
+			wantPrefix:     "config/CommonCommands/ВыгрузитьДанныеВФайл/Ext/CommandModule.bsl",
+			wantErr:        false,
+		},
+		{
+			input:          "ВнешнийИсточникДанных.Шлюз.Таблица.PDT_PartialOperations.МодульМенеджера",
+			sourceCodeRoot: "config",
+			wantPrefix:     "config/ExternalDataSources/Шлюз/Tables/PDT_PartialOperations/Ext/ManagerModule.bsl",
+			wantErr:        false,
+		},
+		{
 			input:          "НеизвестныйТип.Объект",
 			sourceCodeRoot: "config",
 			wantPrefix:     "",

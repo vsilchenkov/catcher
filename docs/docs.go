@@ -56,6 +56,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/prj/:id/session/end": {
+            "post": {
+                "description": "Отправка окончания сессии в Sentry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "End Session",
+                "operationId": "endSession",
+                "parameters": [
+                    {
+                        "description": "Данные сессии",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/catcher_app_internal_models.Session"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app_internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/prj/:id/session/start": {
+            "post": {
+                "description": "Отправка начало сессии в Sentry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Session"
+                ],
+                "summary": "Start Session",
+                "operationId": "startSession",
+                "parameters": [
+                    {
+                        "description": "Данные сессии",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/catcher_app_internal_models.Session"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/app_internal_handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/reg": {
             "get": {
                 "description": "Проверка работы метода getInfo",
@@ -244,6 +332,13 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "items": {
+                    "description": "The fields below are only relevant for logs",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sentry.Log"
                     }
                 },
                 "level": {
@@ -458,6 +553,38 @@ const docTemplate = `{
                 }
             }
         },
+        "catcher_app_internal_models.Session": {
+            "type": "object",
+            "required": [
+                "did",
+                "environment",
+                "release",
+                "sid"
+            ],
+            "properties": {
+                "did": {
+                    "type": "string"
+                },
+                "environment": {
+                    "type": "string"
+                },
+                "errorsEventer": {
+                    "type": "integer"
+                },
+                "errorsReporter": {
+                    "type": "integer"
+                },
+                "release": {
+                    "type": "string"
+                },
+                "sid": {
+                    "type": "string"
+                },
+                "started": {
+                    "type": "string"
+                }
+            }
+        },
         "catcher_app_internal_models.Stacktrace": {
             "type": "object",
             "properties": {
@@ -467,6 +594,32 @@ const docTemplate = `{
                         "$ref": "#/definitions/catcher_app_internal_models.Frame"
                     }
                 }
+            }
+        },
+        "sentry.AttrType": {
+            "type": "string",
+            "enum": [
+                "",
+                "boolean",
+                "integer",
+                "double",
+                "string"
+            ],
+            "x-enum-varnames": [
+                "AttributeInvalid",
+                "AttributeBool",
+                "AttributeInt",
+                "AttributeFloat",
+                "AttributeString"
+            ]
+        },
+        "sentry.Attribute": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/sentry.AttrType"
+                },
+                "value": {}
             }
         },
         "sentry.Breadcrumb": {
@@ -726,6 +879,54 @@ const docTemplate = `{
                 "LevelWarning",
                 "LevelError",
                 "LevelFatal"
+            ]
+        },
+        "sentry.Log": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/sentry.Attribute"
+                    }
+                },
+                "body": {
+                    "type": "string"
+                },
+                "level": {
+                    "$ref": "#/definitions/sentry.LogLevel"
+                },
+                "severity_number": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "sentry.LogLevel": {
+            "type": "string",
+            "enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "error",
+                "fatal"
+            ],
+            "x-enum-varnames": [
+                "LogLevelTrace",
+                "LogLevelDebug",
+                "LogLevelInfo",
+                "LogLevelWarn",
+                "LogLevelError",
+                "LogLevelFatal"
             ]
         },
         "sentry.Mechanism": {
@@ -1053,14 +1254,11 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000,
-                3600000000000
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -1071,14 +1269,11 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute",
-                "Hour"
+                "Minute"
             ]
         }
     }

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 
 	"github.com/gin-gonic/gin"
 )

@@ -48,14 +48,21 @@ func (s Service) GetContextAround(filePath string, lineno int) ContextAround {
 	}
 
 	useCache := prj.Sentry.ContextAround.Cache.Use
-	key := fmt.Sprintf("%s:%s:%s:%d", op, prj.Name, filePath, lineno)
+	key := fmt.Sprintf("%s:%s:%s:%d", prj.Id, op, filePath, lineno)
 
 	if useCache {
-		if x, found := s.Cacher.Get(s.Ctx, key); found {
+		x := ContextAround{}
+		found, err := s.Cacher.Get(s.Ctx, key, &x)
+		if found {
 			s.Logger.Debug("Используем кэш ContextAround",
 				s.Logger.Op(op),
 				s.Logger.Str("key", key))
-			return x.(ContextAround)
+			return x
+		} else if err != nil {
+			s.Logger.Error("Ошибка получения значения из кэша",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key),
+				s.Logger.Err(err))
 		}
 	}
 
@@ -110,11 +117,17 @@ func (s Service) GetContextAround(filePath string, lineno int) ContextAround {
 	}
 
 	s.Logger.Debug("Получен контент из git",
-			s.Logger.Op(op),
-			s.Logger.Str("filePath", filePath))
-						
+		s.Logger.Op(op),
+		s.Logger.Str("filePath", filePath))
+
 	if useCache {
-		s.Cacher.Set(s.Ctx, key, res, time.Duration(prj.Sentry.ContextAround.Cache.Expiration)*time.Minute)
+		if len(res.Pre) > 0 || len(res.Post) > 0 {
+			s.Cacher.Set(s.Ctx, key, res, time.Duration(prj.Sentry.ContextAround.Cache.Expiration)*time.Minute)
+		} else {
+			s.Logger.Warn("Попытка добавить в кэш пустой ContextAround",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key))
+		}
 	}
 
 	return res

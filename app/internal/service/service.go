@@ -2,7 +2,7 @@ package service
 
 import (
 	"catcher/app/internal/lib/caching"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"context"
 )

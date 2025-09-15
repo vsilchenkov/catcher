@@ -33,8 +33,8 @@ func (r Report) exception() []sentry.Exception {
 	t = strings.TrimSpace(t)
 
 	exeption := sentry.Exception{
-		Type:  t,
-		Value: v,
+		Type:      t,
+		Value:     v,
 	}
 
 	// Подставим Module без номера строки
@@ -46,6 +46,7 @@ func (r Report) exception() []sentry.Exception {
 	}
 
 	exeption.Stacktrace = r.stacktrace()
+	exeption.Mechanism = r.mechanism()
 
 	result[0] = exeption
 	return result
@@ -114,6 +115,16 @@ func (r Report) stacktrace() *sentry.Stacktrace {
 
 	return stacktrace
 
+}
+
+func (r Report) mechanism() *sentry.Mechanism {
+
+	result := sentry.Mechanism{
+		Type: "generic", // нейтральный тип механизма по умолчанию, когда нет более конкретной семантики
+	}
+	result.SetUnhandled() // когда Handled=false, в интерфейсе и поиске это проявляется как error.unhandled:true
+	
+	return &result
 }
 
 func (r Report) exceptionMessage() []string {

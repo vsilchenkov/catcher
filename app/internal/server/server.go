@@ -1,10 +1,9 @@
 package server
 
 import (
-	"catcher/app/internal/handler"
-	"catcher/app/internal/lib/logging"
 	"catcher/app/internal/models"
-	"catcher/app/internal/service"
+
+	"catcher/pkg/logging"
 	"context"
 	"fmt"
 	"net/http"
@@ -12,15 +11,16 @@ import (
 	"path/filepath"
 	"time"
 
-	svc "github.com/kardianos/service"
 	"github.com/cockroachdb/errors"
+	svc "github.com/kardianos/service"
 )
 
 var errServerClosed = errors.New("http.ListenAndServe: http: Server closed")
 
 type Program struct {
 	models.AppContext
-	Srv Srv
+	Srv     Srv
+	handler http.Handler
 }
 
 type Srv interface {
@@ -28,23 +28,31 @@ type Srv interface {
 	Shutdown(ctx context.Context) error
 }
 
-func NewProgram(srv Srv, appCtx models.AppContext) *Program {
-	return &Program{Srv: srv,
+type Handlers interface {
+}
+
+func NewProgram(srv Srv, handler http.Handler, appCtx models.AppContext) *Program {
+	return &Program{
+		Srv:        srv,
+		handler:    handler,
 		AppContext: appCtx}
 }
 
 func (p *Program) Start(s svc.Service) error {
-	
+
 	// Запускаем в отдельной горутине, чтобы не блокировать Start
 	i := "Starting a web-server on port"
 	port := p.Config.Server.Port
+	version := p.Config.Version
+	build := p.Config.FixedFileInfo.FileVersion.Build
 
 	p.Logger.Info(i,
 		p.Logger.Str("port", port),
-		p.Logger.Str("version", p.Config.Version))
+		p.Logger.Str("version", version),
+		p.Logger.Str("build", fmt.Sprintf("%v", build)))
 
 	if p.Config.Log.OutputInFile {
-		fmt.Printf("%s: %s\n", i, port)
+		fmt.Printf("%s: %s version=%s build=%v\n", i, port, version, build)
 	}
 
 	go p.Run()
@@ -54,8 +62,6 @@ func (p *Program) Start(s svc.Service) error {
 func (p *Program) Run() {
 
 	appCtx := p.AppContext
-	service := service.NewService(appCtx)
-	handlers := handler.NewHandler(service, appCtx)
 
 	logger := logging.GetLogger()
 	port := appCtx.Config.ServerPort()
@@ -67,7 +73,7 @@ func (p *Program) Run() {
 		os.Exit(1)
 	}
 
-	if err := p.Srv.Run(port, handlers.InitHandler()); err != nil && err.Error() != errServerClosed.Error() {
+	if err := p.Srv.Run(port, p.handler); err != nil && err.Error() != errServerClosed.Error() {
 		logger.Error("Error running server",
 			logger.Err(err))
 		os.Exit(1)

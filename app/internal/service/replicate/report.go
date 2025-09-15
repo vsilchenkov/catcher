@@ -2,7 +2,7 @@ package replicate
 
 import (
 	"catcher/app/internal/lib/iofiles"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"catcher/app/internal/service/redirect"
 	"catcher/app/internal/service/project/userinfo"

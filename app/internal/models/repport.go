@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const OpReporter = "reporter"
+
 // https://its.1c.ru/db/v8327doc#bookmark:dev:TI000002558
 type Repport struct {
 	Time       time.Time `json:"time"`

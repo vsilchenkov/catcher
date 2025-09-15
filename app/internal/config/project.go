@@ -27,9 +27,14 @@ type Project struct {
 			UserName string `yaml:"UserName"`
 		} `yaml:"Test"`
 	} `yaml:"Service"`
+	Session struct {
+		Use      bool `yaml:"Use"`
+		Duration int  `yaml:"Duration"`
+	} `yaml:"Session"`
 	release string `yaml:"Release"`
 	Sentry  struct {
 		Dsn           string `yaml:"Dsn" binding:"required"`
+		IimeOut       int    `yaml:"IimeOut"`
 		Environment   string `yaml:"Environment" binding:"required"`
 		Platform      string `yaml:"Platform" binding:"required"`
 		ContextAround struct {

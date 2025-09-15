@@ -25,29 +25,44 @@ func (s Service) AddUserInfo(g Geter, prj config.Project, rd *models.RepportData
 		userName = rd.Data.SessionInfo.UserName
 	}
 
-	var res *models.UserInfo
-	key := fmt.Sprintf("%s:%s:%s", op, prj.Name, userName)
+	res := models.UserInfo{}
+	key := fmt.Sprintf("%s:%s:%s", prj.Id, op, userName)
 
 	useCache := prj.Service.Cache.Use
+	found := false
 	if useCache {
-		if x, found := s.Cacher.Get(s.Ctx, key); found {
+		var err error
+		found, err = s.Cacher.Get(s.Ctx, key, &res)
+		if found {
 			s.Logger.Debug("Используем кэш UserInfo",
 				s.Logger.Op(op),
 				s.Logger.Str("key", key))
-			res = x.(*models.UserInfo)
+		} else if err != nil {
+			s.Logger.Error("Ошибка получения значения из кэша",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key),
+				s.Logger.Err(err))
 		}
 	}
 
-	if res == nil {
-		var err error
-		res, err = g.Get(s.Ctx, userName)
+	if !found {
+		ptr, err := g.Get(s.Ctx, userName)
 		if err != nil {
 			return
 		}
-		if useCache {
-			s.Cacher.Set(s.Ctx, key, res, time.Duration(prj.Service.Cache.Expiration)*time.Minute)
+		if ptr != nil {
+			res = *ptr
+			if useCache {
+				// Проверка: не кэшировать пустой UserInfo
+				if res != (models.UserInfo{}) {
+					s.Cacher.Set(s.Ctx, key, res, time.Duration(prj.Service.Cache.Expiration)*time.Minute)
+				} else {
+					s.Logger.Warn("Попытка добавить в кэш пустой UserInfo",
+						s.Logger.Op(op),
+						s.Logger.Str("key", key))
+				}
+			}
 		}
-
 	}
 
 	copier.Copy(&rd.Data.SessionInfo.UserInfo, &res)

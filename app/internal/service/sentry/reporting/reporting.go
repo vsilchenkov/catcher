@@ -32,6 +32,7 @@ func NewReport(id string, prj config.Project, data models.Repport, files []model
 type eventer interface {
 	IsEventSent(ctx context.Context) (*models.EventID, bool)
 	EventNeedSend() bool
+	IncrErrors(opCtx string) error
 }
 
 func (r Report) Send() (*models.EventID, error) {
@@ -69,20 +70,28 @@ func (r Report) Send() (*models.EventID, error) {
 		return nil, err
 	}
 
-	// cache
 	svcEventing := eventing.New(event, prj, r.AppContext)
 	var eventer eventer = svcEventing
-	x, found := eventer.IsEventSent(ctx)
-	if found {
-		return x, nil
-	}
 
 	// nonexept
 	if !eventer.EventNeedSend() {
 		r.Logger.Debug("Сообщение пропущено, не требует отправки",
 			r.Logger.Str("ID", r.ID))
-			res := models.EventID(r.ID) // возвращаем входящий ID
+		res := models.EventID(r.ID) // возвращаем входящий ID
 		return &res, nil
+	}
+
+	// cache
+	x, found := eventer.IsEventSent(ctx)
+	if found {
+		return x, nil
+	}
+
+	// IncrErrors
+	if err := eventer.IncrErrors(models.OpReporter); err != nil {
+		r.Logger.Error("Ошибка увеличение счетчика отправок",
+			r.Logger.Op(op),
+			r.Logger.Err(err))
 	}
 
 	hub, err := sentryhub.Get(prj, r.AppContext)
@@ -103,7 +112,7 @@ func (r Report) Send() (*models.EventID, error) {
 		return nil, errors.Errorf("sending error %s", r.ID)
 	}
 
-	r.Logger.Debug("Отправлено в Sentry сообщение",
+	r.Logger.Info("Отправлено в Sentry сообщение",
 		r.Logger.Str("ID", r.ID),
 		slog.Any("eventID", eventID),
 		r.Logger.Op(op))

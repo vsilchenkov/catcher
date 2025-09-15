@@ -3,7 +3,7 @@ package service
 import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/lib/caching"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"catcher/app/internal/service/redirect"
 	"catcher/app/internal/service/replicate"
@@ -13,8 +13,12 @@ import (
 )
 
 var ErrBadRequest = errors.New("bad request")
+var ErrBadRequestSentry = errors.New("bad reques by sentry")
 var ErrBadProject = errors.New("no project setting")
 var ErrBadConvert = errors.New("bad convert")
+var ErrBadSentryHub = errors.New("no project setting by sentry")
+var ErrBadSesion = errors.New("session not found")
+var ErrBadSesionErrors = errors.New("bad session errors")
 
 type ConvertReporter interface {
 	ConvertReport(r redirect.Report) (*models.RepportData, error)
@@ -55,7 +59,7 @@ func (r *RegistryService) GetInfo(input models.RegistryInput) models.RegistryInf
 func (r *RegistryService) PushReport(input models.RegistryPushReportInput) (*models.RegistryPushReportResult, error) {
 
 	appCtx := models.NewAppContext(r.ctx, r.config, r.cacher, r.logger)
-	
+
 	report := redirect.NewReport(input.ID, input.Data, appCtx)
 
 	repl := replicate.New(appCtx)

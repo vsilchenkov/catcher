@@ -1,33 +1,30 @@
 package build
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/kardianos/service"
 )
-
-const ProjectName = "Cather"
-
-var Version = "1.5.4"
 
 var Time string
 var User string
 
-type Option struct {
-	Version     string
-	ProjectName string
-	WorkingDir  string
-	Interactive bool
-}
+func NewOption(versionInfoData []byte) (*Option, error) {
 
-func NewOption() *Option {
+	var vi VersionInfo
+	if err := json.Unmarshal(versionInfoData, &vi); err != nil {
+		return nil, errors.WithMessage(err, "ошибка парсинга файла versioninfo.json")
+	}
+
 	return &Option{
-		ProjectName: ProjectName,
-		Version:     Version,
+		VersionInfo: vi,
+		Version:     vi.StringFileInfo.ProductVersion,
 		Interactive: service.Interactive(),
 		WorkingDir:  WorkingDir(),
-	}
+	}, nil
 }
 
 // Получить абсолютный путь к папке, где лежит .exe или запущена программа

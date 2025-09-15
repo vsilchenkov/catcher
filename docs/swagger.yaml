@@ -34,6 +34,11 @@ definitions:
         items:
           type: string
         type: array
+      items:
+        description: The fields below are only relevant for logs
+        items:
+          $ref: '#/definitions/sentry.Log'
+        type: array
       level:
         $ref: '#/definitions/sentry.Level'
       logger:
@@ -173,12 +178,54 @@ definitions:
       id:
         type: string
     type: object
+  catcher_app_internal_models.Session:
+    properties:
+      did:
+        type: string
+      environment:
+        type: string
+      errorsEventer:
+        type: integer
+      errorsReporter:
+        type: integer
+      release:
+        type: string
+      sid:
+        type: string
+      started:
+        type: string
+    required:
+    - did
+    - environment
+    - release
+    - sid
+    type: object
   catcher_app_internal_models.Stacktrace:
     properties:
       frames:
         items:
           $ref: '#/definitions/catcher_app_internal_models.Frame'
         type: array
+    type: object
+  sentry.AttrType:
+    enum:
+    - ""
+    - boolean
+    - integer
+    - double
+    - string
+    type: string
+    x-enum-varnames:
+    - AttributeInvalid
+    - AttributeBool
+    - AttributeInt
+    - AttributeFloat
+    - AttributeString
+  sentry.Attribute:
+    properties:
+      type:
+        $ref: '#/definitions/sentry.AttrType'
+      value: {}
     type: object
   sentry.Breadcrumb:
     properties:
@@ -366,6 +413,41 @@ definitions:
     - LevelWarning
     - LevelError
     - LevelFatal
+  sentry.Log:
+    properties:
+      attributes:
+        additionalProperties:
+          $ref: '#/definitions/sentry.Attribute'
+        type: object
+      body:
+        type: string
+      level:
+        $ref: '#/definitions/sentry.LogLevel'
+      severity_number:
+        type: integer
+      timestamp:
+        type: string
+      trace_id:
+        items:
+          type: integer
+        type: array
+    type: object
+  sentry.LogLevel:
+    enum:
+    - trace
+    - debug
+    - info
+    - warn
+    - error
+    - fatal
+    type: string
+    x-enum-varnames:
+    - LogLevelTrace
+    - LogLevelDebug
+    - LogLevelInfo
+    - LogLevelWarn
+    - LogLevelError
+    - LogLevelFatal
   sentry.Mechanism:
     properties:
       data:
@@ -608,14 +690,11 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
-    - 3600000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -626,14 +705,11 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
-    - Hour
 host: localhost:8000
 info:
   contact: {}
@@ -668,6 +744,64 @@ paths:
       summary: Send Event
       tags:
       - Event
+  /api/prj/:id/session/end:
+    post:
+      consumes:
+      - application/json
+      description: Отправка окончания сессии в Sentry
+      operationId: endSession
+      parameters:
+      - description: Данные сессии
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/catcher_app_internal_models.Session'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: End Session
+      tags:
+      - Session
+  /api/prj/:id/session/start:
+    post:
+      consumes:
+      - application/json
+      description: Отправка начало сессии в Sentry
+      operationId: startSession
+      parameters:
+      - description: Данные сессии
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/catcher_app_internal_models.Session'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/app_internal_handler.errorResponse'
+      summary: Start Session
+      tags:
+      - Session
   /api/reg:
     get:
       description: Проверка работы метода getInfo

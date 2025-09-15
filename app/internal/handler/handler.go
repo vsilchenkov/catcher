@@ -2,7 +2,7 @@ package handler
 
 import (
 	"catcher/app/internal/config"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"catcher/app/internal/service"
 	_ "catcher/docs"
@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -21,14 +22,14 @@ type Handler struct {
 	logger   logging.Logger
 }
 
-func NewHandler(service *service.Services, appCtx models.AppContext) *Handler {
+func New(service *service.Services, appCtx models.AppContext) *Handler {
 	return &Handler{
 		services: service,
 		config:   appCtx.Config,
 		logger:   appCtx.Logger}
 }
 
-func (h *Handler) InitHandler() *gin.Engine {
+func (h *Handler) Init() *gin.Engine {
 
 	debug := h.config.UseDebug()
 	if !debug {
@@ -65,6 +66,14 @@ func (h *Handler) InitHandler() *gin.Engine {
 		prj := api.Group("/prj/:id")
 		{
 			prj.POST("/sendEvent", h.sendEvent)
+			prj.GET("/clearCache", h.clearProjectCache)
+
+			session := prj.Group("/session")
+			{
+				session.POST("/start", h.startSession)
+				session.POST("/end", h.endSession)
+			}
+
 		}
 
 		service := api.Group("/service")
@@ -102,7 +111,11 @@ func (h *Handler) initCustumLogger() gin.HandlerFunc {
 
 func (h *Handler) initSentryGin() gin.HandlerFunc {
 
-	if err := sentry.Init(logging.SentryClientOptions(h.config)); err != nil {
+	sentryConfig := &logging.SentryConfig{}
+	copier.Copy(sentryConfig, h.config.Option)
+	copier.Copy(sentryConfig, h.config.Sentry)
+	
+	if err := sentry.Init(logging.SentryClientOptions(sentryConfig)); err != nil {
 		h.logger.Error("Sentry initialization failed",
 			h.logger.Err(err))
 	}

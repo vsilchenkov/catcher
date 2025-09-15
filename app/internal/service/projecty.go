@@ -3,7 +3,7 @@ package service
 import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/lib/caching"
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"catcher/app/internal/service/redirect"
 	"catcher/app/internal/service/replicate"
@@ -30,7 +30,6 @@ func NewProjectyService(appCtx models.AppContext) *ProjectyService {
 
 func (p ProjectyService) SendEvent(projectId string, input models.Event) (*models.SendEventResult, error) {
 
-	// op := "ProjectyService.SendEvent"
 	prj, err := p.config.ProjectById(projectId)
 	if err != nil {
 		return nil, ErrBadProject
@@ -46,7 +45,7 @@ func (p ProjectyService) SendEvent(projectId string, input models.Event) (*model
 	}
 
 	id := string(event.EventID)
-	if  id == "" {
+	if id == "" {
 		id = uuid.New().String()
 	}
 	svcEvent := sending.NewEvent(prj, id, event, appCtx)
@@ -59,4 +58,20 @@ func (p ProjectyService) SendEvent(projectId string, input models.Event) (*model
 
 	return &result, err
 
+}
+
+func (p ProjectyService) ClearCache(projectId string) error {
+
+	const op = "proecty.ClearCache"
+
+	err := p.cacher.ClearByPrefix(p.ctx, projectId)
+	if err != nil {
+		return err
+	}
+
+	p.logger.Debug("Кэш проекта очищен",
+		p.logger.Str("projectId", projectId),
+		p.logger.Op(op))
+
+	return nil
 }

@@ -2,9 +2,9 @@
   "FixedFileInfo": {
     "FileVersion": {
       "Major": 1,
-      "Minor": 5,
-      "Patch": 4,
-      "Build": 0
+      "Minor": 7,
+      "Patch": 1,
+      "Build": 2
     },
     "FileFlagsMask": "3f",
     "FileFlags": "00",
@@ -13,7 +13,7 @@
     "FileSubType": "00"
   },
   "StringFileInfo": {
-    "ProductVersion": "1.5.4",
+    "ProductVersion": "1.7.1",
     "CompanyName": "Vozovoz",
     "FileDescription": "API Service",
     "InternalName": "catcher",

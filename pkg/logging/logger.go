@@ -1,7 +1,6 @@
 package logging
 
 import (
-	"catcher/app/internal/config"
 	"fmt"
 	"log"
 	"os"
@@ -43,16 +42,16 @@ func GetLogger() Logger {
 	return NewLogger(logger)
 }
 
-func Initlogger(c *config.Config) Logger {
+func Initlogger(c *Config, sConfig *SentryConfig) Logger {
 
 	var handler slog.Handler
 
-	level, ok := levelMap[c.Log.Level]
+	level, ok := levelMap[c.Level]
 	if !ok {
 		level = slog.LevelInfo
 	}
 
-	if !c.Log.OutputInFile {
+	if !c.OutputInFile {
 		// Вывод в stdout с текстовым форматом
 		handler = tint.NewHandler(colorable.NewColorable(os.Stderr), &tint.Options{
 			Level:      level,
@@ -63,7 +62,7 @@ func Initlogger(c *config.Config) Logger {
 	} else {
 		// Вывод в файл с JSON форматом
 		fileName := "app.log"
-		file, err := GetOutputLogFile(c.WorkingDir, c.Log.Dir, fileName)
+		file, err := GetOutputLogFile(c.WorkingDir, c.Dir, fileName)
 		if err != nil {
 			log.Printf("Не удалось открыть файл логов %q, используется стандартный stderr\n%v", fileName, err)
 			handler = slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
@@ -87,7 +86,7 @@ func Initlogger(c *config.Config) Logger {
 		}
 	}
 
-	if c.Sentry.Use {
+	if sConfig.Use {
 		multiHandler := NewMultiHandler(handler, SentryHandler())
 		logger = slog.New(multiHandler)
 	} else {

@@ -38,3 +38,27 @@ func (h *Handler) sendEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"event_id": eventId})
 
 }
+
+// @Summary Сlear the project cache
+// @Tags Cache
+// @Description Очищает все данные проекта, сохранённые в кэше 
+// @ID clearProjectCache
+// @Produce  json
+// @Success 200 {object} map[string]string
+// @Failure default {object} errorResponse
+// @Router /api/service/clearCache [get]
+func (h *Handler) clearProjectCache(c *gin.Context) {
+
+	const op = "handler.service.clearProjectCache"
+
+	projectId := c.Param("id")
+
+	if err := h.services.Projecty.ClearCache(projectId); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, op, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": "ok",
+	})
+}

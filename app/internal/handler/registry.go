@@ -2,6 +2,7 @@ package handler
 
 import (
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"catcher/app/internal/models"
@@ -66,25 +67,73 @@ func (h *Handler) pushReport(c *gin.Context) {
 
 	const op = "registry.pushReport"
 
-	data, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, op+".io.ReadAll", err)
-		return
+	form, err := c.MultipartForm()
+	if err == nil {
+		h.pushReports(c, form)
+	} else {
+
+		data, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			newErrorResponse(c, http.StatusBadRequest, op+".io.ReadAll", err)
+			return
+		}
+
+		result, err := h.registryPushReport(data)
+		if err != nil {
+			newErrorResponse(c, http.StatusInternalServerError, op, err)
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
+
 	}
 
-	id := uuid.New().String()
+}
 
+func (h *Handler) pushReports(c *gin.Context, form *multipart.Form) {
+
+	const op = "registry.pushReports"
+
+	// multipart-форма — собираем все файлы с любым именем
+	var results []*models.RegistryPushReportResult
+
+	for _, files := range form.File {
+		for _, f := range files {
+
+			file, err := f.Open()
+			if err != nil {
+				newErrorResponse(c, http.StatusBadRequest, op+".Open", err)
+				return
+			}
+			defer file.Close()
+
+			data, err := io.ReadAll(file)
+			if err != nil {
+				newErrorResponse(c, http.StatusBadRequest, op+".ReadAll", err)
+				return
+			}
+
+			result, err := h.registryPushReport(data)
+			if err != nil {
+				newErrorResponse(c, http.StatusInternalServerError, op, err)
+				return
+			}
+			results = append(results, result)
+		}
+	}
+
+	c.JSON(http.StatusOK, results)
+
+}
+
+func (h *Handler) registryPushReport(data []byte) (*models.RegistryPushReportResult, error) {
+
+	id := uuid.New().String()
 	input := models.RegistryPushReportInput{
 		ID:   id,
 		Data: data,
 	}
 
-	result, err := h.services.Registry.PushReport(input)
-	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, op, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
-
+	return  h.services.Registry.PushReport(input)
+	
 }

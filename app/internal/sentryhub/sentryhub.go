@@ -11,6 +11,7 @@ import (
 
 type Hub struct {
 	*sentry.Hub
+	prj    config.Project
 	appCtx models.AppContext
 }
 
@@ -36,7 +37,7 @@ func New(prj config.Project, appCtx models.AppContext) (*Hub, error) {
 	}
 
 	h := sentry.NewHub(c, sentry.NewScope())
-	hub := Hub{h, appCtx}
+	hub := Hub{h, prj, appCtx}
 
 	hubsMu.Lock()
 	hubs[toProject(prj)] = hub

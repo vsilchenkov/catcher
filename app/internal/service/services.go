@@ -11,6 +11,12 @@ type Registry interface {
 
 type Projecty interface {
 	SendEvent(projectId string, input models.Event) (*models.SendEventResult, error)
+	ClearCache(projectId string) error
+}
+
+type Session interface {
+	Start(projectId string, input models.Session) error
+	End(projectId string, input models.Session) error
 }
 
 type Service interface {
@@ -20,15 +26,15 @@ type Service interface {
 type Services struct {
 	Registry
 	Projecty
+	Session
 	Service
 }
 
-func NewService(appCtx models.AppContext) *Services {
+func New(appCtx models.AppContext) *Services {
 	return &Services{
 		Registry: NewRegistryService(appCtx),
 		Projecty: NewProjectyService(appCtx),
-		Service: NewServiceService(appCtx),
+		Session: NewSessionService(appCtx),
+		Service:  NewServiceService(appCtx),
 	}
 }
-
-

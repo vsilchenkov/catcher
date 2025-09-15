@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/getsentry/sentry-go"
 )
 
@@ -55,7 +56,7 @@ func (s *Service) generateKey() bool {
 	var key string
 	for _, f := range frames {
 		if f.StackStart {
-			
+
 			var m string
 			switch {
 			case f.AbsPath != "":
@@ -65,7 +66,7 @@ func (s *Service) generateKey() bool {
 			default:
 				m = f.Filename
 			}
-			
+
 			key = fmt.Sprintf("%s:%d", m, f.Lineno)
 		}
 	}
@@ -74,7 +75,7 @@ func (s *Service) generateKey() bool {
 		return false
 	}
 
-	s.key = fmt.Sprintf("%s:%s:%s", s.prj.Name, s.event.User.Username, key)
+	s.key = fmt.Sprintf("%s:%s", s.event.User.Username, key)
 	return true
 
 }
@@ -84,6 +85,8 @@ type nonExepter interface {
 }
 
 func (s *Service) EventNeedSend() bool {
+
+	const op = "eventing.EventNeedSend"
 
 	prj := s.prj
 
@@ -95,10 +98,14 @@ func (s *Service) EventNeedSend() bool {
 
 	// Проверим на исключения
 	key := fmt.Sprintf("%s:exeptions", prj.Id)
-	x, found := s.Cacher.Get(s.Ctx, key)
-	if found {
-		exepts = x.([]string)
-	} else {
+	found, err := s.Cacher.Get(s.Ctx, key, &exepts)
+	if !found {
+		if err != nil {
+			s.Logger.Error("Ошибка получения значения из кэша",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key),
+				s.Logger.Err(err))
+		}
 
 		svc := prj.Service
 		creds := nonexept.NewCredintials(svc.Credintials.UserName, svc.Credintials.Password)
@@ -110,9 +117,14 @@ func (s *Service) EventNeedSend() bool {
 			return true
 		}
 
-		s.Cacher.Set(s.Ctx, key, e, time.Duration(s.prj.Service.Exeptions.Cache.Expiration)*time.Minute)
+		if len(e) > 0 {
+			s.Cacher.Set(s.Ctx, key, e, time.Duration(s.prj.Service.Exeptions.Cache.Expiration)*time.Minute)
+		} else {
+			s.Logger.Warn("Попытка добавить в кэш пустой список исключений",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key))
+		}
 		exepts = e
-
 	}
 
 	t, v := s.valueExeption()
@@ -149,7 +161,7 @@ func (s *Service) EventNeedSend() bool {
 func (s *Service) IsEventSent(ctx context.Context) (*models.EventID, bool) {
 
 	const op = "eventing.IsEventSent"
-	key := s.keySending()
+	key := s.keySending(s.prj)
 
 	if !s.prj.Sentry.SendingCache.Use || key == "" {
 		return nil, false
@@ -157,15 +169,20 @@ func (s *Service) IsEventSent(ctx context.Context) (*models.EventID, bool) {
 
 	opCtx := opKey(ctx, op)
 
-	var eventID *models.EventID
-	x, found := s.Cacher.Get(s.Ctx, key)
+	eventID := new(models.EventID)
+	found, err := s.Cacher.Get(s.Ctx, key, eventID)
 	if found {
-		eventID = x.(*models.EventID)
 		s.Logger.Debug("Используем кэш Event. Cooбщение в Sentry уже было отправлено",
 			s.Logger.Op(opCtx),
 			s.Logger.Str("key", key),
 			s.Logger.Str("eventID", eventID.String()))
-
+	} else {
+		if err != nil {
+			s.Logger.Error("Ошибка получения значения из кэша",
+				s.Logger.Op(op),
+				s.Logger.Str("key", key),
+				s.Logger.Err(err))
+		}
 	}
 
 	return eventID, found
@@ -174,24 +191,46 @@ func (s *Service) IsEventSent(ctx context.Context) (*models.EventID, bool) {
 func (s *Service) AddCacheSending(ctx context.Context, eventID *models.EventID) {
 
 	const op = "eventing.AddCacheSending"
-	key := s.keySending()
+	key := s.keySending(s.prj)
 
 	if !s.prj.Sentry.SendingCache.Use || key == "" {
 		return
 	}
 
 	opCtx := opKey(ctx, op)
-	s.Cacher.Set(s.Ctx, key, eventID, time.Duration(s.prj.Sentry.SendingCache.Expiration)*time.Minute)
-
-	s.Logger.Debug("Добавлен кэш сообщения",
-		s.Logger.Op(opCtx),
-		s.Logger.Str("key", key),
-		s.Logger.Str("eventID", eventID.String()))
+	if eventID != nil {
+		s.Cacher.Set(s.Ctx, key, *eventID, time.Duration(s.prj.Sentry.SendingCache.Expiration)*time.Minute)
+		s.Logger.Debug("Добавлен кэш сообщения",
+			s.Logger.Op(opCtx),
+			s.Logger.Str("key", key),
+			s.Logger.Str("eventID", eventID.String()))
+	} else {
+		s.Logger.Warn("Попытка добавить в кэш nil eventID",
+			s.Logger.Op(opCtx),
+			s.Logger.Str("key", key))
+	}
 
 }
 
-func (s *Service) keySending() string {
-	return fmt.Sprintf("%s:%s", opSending, s.key)
+func (s *Service) IncrErrors(opCtx string) error {
+
+	const op = "errors"
+	key := fmt.Sprintf("%s:%s:%s:%s:%s:%s", s.prj.Id, opCtx, op, s.event.Environment, s.event.User.Username, s.sessionEvent())
+	
+	s.Logger.Debug("Запись количества ошибок в кэш",
+			s.Logger.Str("key", key),
+			s.Logger.Op(opCtx))
+
+	_, err := s.Cacher.Incr(s.Ctx, key, time.Duration(s.prj.Session.Duration)*time.Minute)
+	if err != nil {
+		return errors.WithMessagef(err, op)
+	}
+
+	return nil
+}
+
+func (s *Service) keySending(prj config.Project) string {
+	return fmt.Sprintf("%s:%s:%s", prj.Id, opSending, s.key)
 }
 
 func (s *Service) valueExeption() (string, string) {
@@ -201,6 +240,34 @@ func (s *Service) valueExeption() (string, string) {
 	}
 
 	return "", ""
+}
+
+func (s Service) sessionEvent() string {
+
+	sessionCtx, ok := s.event.Contexts["Session Data"]
+	if !ok {
+		sessionCtx, ok = s.event.Contexts["Session_data"]
+		if !ok {
+			return ""
+		}
+	}
+
+	value, found := sessionCtx["Session"]
+	if !found {
+		return ""
+	}
+
+	switch v := value.(type) {
+	case float64:
+		return fmt.Sprintf("%.0f", v) // без дробной части
+	case int:
+		return fmt.Sprintf("%v", v)
+	case string:
+		return v
+	default:
+		return ""
+	}
+
 }
 
 func opKey(ctx context.Context, op string) string {

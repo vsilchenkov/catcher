@@ -6,6 +6,8 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
+const OpEventer = "eventer"
+
 type EventID string
 
 type Event struct {

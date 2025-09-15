@@ -1,7 +1,7 @@
 package userinfo
 
 import (
-	"catcher/app/internal/lib/logging"
+	"catcher/pkg/logging"
 	"catcher/app/internal/lib/times"
 	"catcher/app/internal/models"
 	"context"

@@ -23,6 +23,7 @@ type Logger interface {
 	Err(err error) slog.Attr
 	Op(value string) slog.Attr
 	Str(key, value string) slog.Attr
+	Any(key string, value any) slog.Attr
 }
 
 var logger *slog.Logger
@@ -132,6 +133,13 @@ func (l *defaultlogger) Str(key, value string) slog.Attr {
 	return slog.Attr{
 		Key:   key,
 		Value: slog.StringValue(value),
+	}
+}
+
+func (l *defaultlogger) Any(key string, value any) slog.Attr {
+	return slog.Attr{
+		Key:   key,
+		Value: slog.AnyValue(value),
 	}
 }
 

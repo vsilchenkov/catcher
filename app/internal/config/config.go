@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	logLevel_debug int = 5
 	sentry_timeout int = 5
 )
 
@@ -33,6 +32,8 @@ type Config struct {
 	} `yaml:"Registry"`
 
 	Projects []Project `yaml:"Projects" validate:"required,dive"`
+
+	SentryMetrics SentryMetrics `yaml:"SentryMetrics"`
 
 	Redis struct {
 		Use         bool   `yaml:"Use"`
@@ -66,6 +67,7 @@ type Config struct {
 
 type flags struct {
 	configPath string
+	logdir     string
 }
 
 func New(b build.Option) *Config {
@@ -78,12 +80,15 @@ func ParseFlags() flags {
 
 	var debug bool
 	var configPath string
+	var logdir string
 	flag.BoolVar(&debug, "debug", false, "Use debug")
 	flag.StringVar(&configPath, "config", "config/config.yml", "Путь к файлу настроек")
+	flag.StringVar(&logdir, "logdir", "", "Путь к каталогу логирования")
 	flag.Parse()
 
 	flags := flags{
 		configPath: configPath,
+		logdir:     logdir,
 	}
 
 	return flags
@@ -117,6 +122,10 @@ func LoadSettigs(flags flags, c *Config) error {
 
 	if err := defaults.Set(c); err != nil {
 		return errors.WithMessagef(err, "%s - ошибка установки настроек по умолчанию", op)
+	}
+
+	if flags.logdir != "" {
+		c.Log.Dir = flags.logdir
 	}
 
 	if c.Registry.Timeout == 0 {

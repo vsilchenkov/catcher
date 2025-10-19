@@ -3,7 +3,7 @@ package main
 import (
 	"catcher/app/build"
 	"catcher/app/internal/config"
-	"catcher/app/internal/handler"
+	handler "catcher/app/internal/handler/catch"
 	"catcher/app/internal/lib/caching"
 	"catcher/app/internal/lib/caching/memory"
 	"catcher/app/internal/lib/caching/redis"
@@ -16,7 +16,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -67,7 +66,8 @@ func main() {
 	if sentryConfig.Use {
 		err = sentry.Init(logging.SentryClientOptions(sentryConfig))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("init sentry error: %v\n", err)
+			os.Exit(1)
 		}
 		defer sentry.Flush(2 * time.Second)
 	}
@@ -108,12 +108,12 @@ func main() {
 		svcCacher = caching.New(cacher)
 	}
 
-	appCtx := models.NewAppContext(ctx, c, svcCacher, logger)
+	appCtx := models.NewAppContext(ctx, c, svcCacher, logger, nil)
 	srv := http.New(appCtx)
 
 	service := service.New(appCtx)
 	handler := handler.New(service, appCtx).Init()
-	prg := server.NewProgram(srv, handler, appCtx)
+	prg := server.NewProgram(srv, handler, c.Server.Port, appCtx)
 
 	s, err := svc.New(prg, svcConfig)
 	if err != nil {

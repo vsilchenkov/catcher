@@ -2,7 +2,7 @@ package reporting
 
 import (
 	"catcher/app/internal/lib/gitbsl"
-	"catcher/app/internal/sentryhub/normalize"
+	"catcher/app/internal/sentry/normalize"
 	"catcher/app/internal/service/sentry/stacking"
 	"fmt"
 	"strings"
@@ -33,8 +33,8 @@ func (r Report) exception() []sentry.Exception {
 	t = strings.TrimSpace(t)
 
 	exeption := sentry.Exception{
-		Type:      t,
-		Value:     v,
+		Type:  t,
+		Value: v,
 	}
 
 	// Подставим Module без номера строки
@@ -123,7 +123,7 @@ func (r Report) mechanism() *sentry.Mechanism {
 		Type: "generic", // нейтральный тип механизма по умолчанию, когда нет более конкретной семантики
 	}
 	result.SetUnhandled() // когда Handled=false, в интерфейсе и поиске это проявляется как error.unhandled:true
-	
+
 	return &result
 }
 

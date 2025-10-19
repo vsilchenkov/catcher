@@ -2,9 +2,9 @@
   "FixedFileInfo": {
     "FileVersion": {
       "Major": 1,
-      "Minor": 7,
-      "Patch": 2,
-      "Build": 1
+      "Minor": 0,
+      "Patch": 3,
+      "Build": 0
     },
     "FileFlagsMask": "3f",
     "FileFlags": "00",
@@ -13,15 +13,15 @@
     "FileSubType": "00"
   },
   "StringFileInfo": {
-    "ProductVersion": "1.7.2",
+    "ProductVersion": "1.0.3",
     "CompanyName": "Vozovoz",
     "FileDescription": "API Service",
-    "InternalName": "catcher",
+    "InternalName": "sentry_exporter",
     "LegalCopyright": "© 2025 Vozovoz",
     "LegalTrademarks": "",
-    "OriginalFilename": "catcher.exe",
+    "OriginalFilename": "sentry_exporter.exe",
     "PrivateBuild": "",
-    "ProductName": "Catcher API Service",
+    "ProductName": "Sentry exporter API Service",
     "SpecialBuild": "",
     "Comments": ""
   },

@@ -2,10 +2,10 @@ package handler
 
 import (
 	"catcher/app/internal/config"
-	"catcher/pkg/logging"
 	"catcher/app/internal/models"
 	"catcher/app/internal/service"
 	_ "catcher/docs"
+	"catcher/pkg/logging"
 	"os"
 
 	"github.com/getsentry/sentry-go"
@@ -37,10 +37,12 @@ func (h *Handler) Init() *gin.Engine {
 	}
 
 	router := gin.New()
+	// router.Use(responseWriterMW(h.logger))
+	 router.Use(SafeBodyReaderMW(h.logger))
 	router.Use(gin.Recovery())
 
 	if debug {
-		router.Use(h.initCustumLogger())
+		router.Use(h.loggerMW())
 	} else {
 		if h.config.Interactive {
 			router.Use(gin.Logger())
@@ -48,7 +50,7 @@ func (h *Handler) Init() *gin.Engine {
 	}
 
 	if h.config.Sentry.Use {
-		router.Use(h.initSentryGin())
+		router.Use(h.sentryMW())
 	}
 
 	router.GET("/", h.swagger)
@@ -79,6 +81,8 @@ func (h *Handler) Init() *gin.Engine {
 		service := api.Group("/service")
 		{
 			service.GET("/clearCache", h.clearCache)
+			service.GET("/test", h.test)
+			service.POST("/test", h.test)
 		}
 
 	}
@@ -87,7 +91,7 @@ func (h *Handler) Init() *gin.Engine {
 
 }
 
-func (h *Handler) initCustumLogger() gin.HandlerFunc {
+func (h *Handler) loggerMW() gin.HandlerFunc {
 
 	var out *os.File
 	out = os.Stdout
@@ -109,12 +113,12 @@ func (h *Handler) initCustumLogger() gin.HandlerFunc {
 	return custumlogger
 }
 
-func (h *Handler) initSentryGin() gin.HandlerFunc {
+func (h *Handler) sentryMW() gin.HandlerFunc {
 
 	sentryConfig := &logging.SentryConfig{}
 	copier.Copy(sentryConfig, h.config.Option)
 	copier.Copy(sentryConfig, h.config.Sentry)
-	
+
 	if err := sentry.Init(logging.SentryClientOptions(sentryConfig)); err != nil {
 		h.logger.Error("Sentry initialization failed",
 			h.logger.Err(err))

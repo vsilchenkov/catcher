@@ -58,7 +58,7 @@ func (r *RegistryService) GetInfo(input models.RegistryInput) models.RegistryInf
 
 func (r *RegistryService) PushReport(input models.RegistryPushReportInput) (*models.RegistryPushReportResult, error) {
 
-	appCtx := models.NewAppContext(r.ctx, r.config, r.cacher, r.logger)
+	appCtx := models.NewAppContext(r.ctx, r.config, r.cacher, r.logger, nil)
 
 	report := redirect.NewReport(input.ID, input.Data, appCtx)
 

@@ -292,180 +292,7 @@ const docTemplate = `{
             }
         },
         "catcher_app_internal_models.Event": {
-            "type": "object",
-            "properties": {
-                "breadcrumbs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sentry.Breadcrumb"
-                    }
-                },
-                "check_in": {
-                    "$ref": "#/definitions/sentry.CheckIn"
-                },
-                "contexts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/sentry.Context"
-                    }
-                },
-                "debug_meta": {
-                    "$ref": "#/definitions/sentry.DebugMeta"
-                },
-                "dist": {
-                    "type": "string"
-                },
-                "environment": {
-                    "type": "string"
-                },
-                "event_id": {
-                    "type": "string"
-                },
-                "exception": {
-                    "$ref": "#/definitions/catcher_app_internal_models.Exception"
-                },
-                "extra": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "fingerprint": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "items": {
-                    "description": "The fields below are only relevant for logs",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sentry.Log"
-                    }
-                },
-                "level": {
-                    "$ref": "#/definitions/sentry.Level"
-                },
-                "logger": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "modules": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "monitor_config": {
-                    "$ref": "#/definitions/sentry.MonitorConfig"
-                },
-                "platform": {
-                    "type": "string"
-                },
-                "release": {
-                    "type": "string"
-                },
-                "request": {},
-                "sdk": {
-                    "$ref": "#/definitions/sentry.SdkInfo"
-                },
-                "server_name": {
-                    "type": "string"
-                },
-                "spans": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sentry.Span"
-                    }
-                },
-                "start_timestamp": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "threads": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/sentry.Thread"
-                    }
-                },
-                "timestamp": {
-                    "type": "string"
-                },
-                "transaction": {
-                    "type": "string"
-                },
-                "transaction_info": {
-                    "$ref": "#/definitions/sentry.TransactionInfo"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/sentry.User"
-                }
-            }
-        },
-        "catcher_app_internal_models.Exception": {
-            "type": "object",
-            "properties": {
-                "values": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/catcher_app_internal_models.ExceptionValue"
-                    }
-                }
-            }
-        },
-        "catcher_app_internal_models.ExceptionValue": {
-            "type": "object",
-            "properties": {
-                "stacktrace": {
-                    "$ref": "#/definitions/catcher_app_internal_models.Stacktrace"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "catcher_app_internal_models.Frame": {
-            "type": "object",
-            "properties": {
-                "abs_path": {
-                    "type": "string"
-                },
-                "context_line": {
-                    "type": "string"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "function": {
-                    "type": "string"
-                },
-                "in_app": {
-                    "type": "boolean"
-                },
-                "lineno": {
-                    "type": "integer"
-                },
-                "module": {
-                    "type": "string"
-                },
-                "module_abs": {
-                    "type": "string"
-                },
-                "stack_start": {
-                    "type": "boolean"
-                }
-            }
+            "type": "object"
         },
         "catcher_app_internal_models.RegistryInfo": {
             "type": "object",
@@ -585,43 +412,6 @@ const docTemplate = `{
                 }
             }
         },
-        "catcher_app_internal_models.Stacktrace": {
-            "type": "object",
-            "properties": {
-                "frames": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/catcher_app_internal_models.Frame"
-                    }
-                }
-            }
-        },
-        "sentry.AttrType": {
-            "type": "string",
-            "enum": [
-                "",
-                "boolean",
-                "integer",
-                "double",
-                "string"
-            ],
-            "x-enum-varnames": [
-                "AttributeInvalid",
-                "AttributeBool",
-                "AttributeInt",
-                "AttributeFloat",
-                "AttributeString"
-            ]
-        },
-        "sentry.Attribute": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "$ref": "#/definitions/sentry.AttrType"
-                },
-                "value": {}
-            }
-        },
         "sentry.Breadcrumb": {
             "type": "object",
             "properties": {
@@ -643,35 +433,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
-                }
-            }
-        },
-        "sentry.CheckIn": {
-            "type": "object",
-            "properties": {
-                "check_in_id": {
-                    "description": "Check-In ID (unique and client generated)",
-                    "type": "string"
-                },
-                "duration": {
-                    "description": "The duration of the check-in. Will only take effect if the status is ok or error.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/time.Duration"
-                        }
-                    ]
-                },
-                "monitor_slug": {
-                    "description": "The distinct slug of the monitor.",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "The status of the check-in.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/sentry.CheckInStatus"
-                        }
-                    ]
                 }
             }
         },
@@ -881,54 +642,6 @@ const docTemplate = `{
                 "LevelFatal"
             ]
         },
-        "sentry.Log": {
-            "type": "object",
-            "properties": {
-                "attributes": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/sentry.Attribute"
-                    }
-                },
-                "body": {
-                    "type": "string"
-                },
-                "level": {
-                    "$ref": "#/definitions/sentry.LogLevel"
-                },
-                "severity_number": {
-                    "type": "integer"
-                },
-                "timestamp": {
-                    "type": "string"
-                },
-                "trace_id": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "sentry.LogLevel": {
-            "type": "string",
-            "enum": [
-                "trace",
-                "debug",
-                "info",
-                "warn",
-                "error",
-                "fatal"
-            ],
-            "x-enum-varnames": [
-                "LogLevelTrace",
-                "LogLevelDebug",
-                "LogLevelInfo",
-                "LogLevelWarn",
-                "LogLevelError",
-                "LogLevelFatal"
-            ]
-        },
         "sentry.Mechanism": {
             "type": "object",
             "properties": {
@@ -958,32 +671,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "sentry.MonitorConfig": {
-            "type": "object",
-            "properties": {
-                "checkin_margin": {
-                    "description": "The allowed margin of minutes after the expected check-in time that\nthe monitor will not be considered missed for.",
-                    "type": "integer"
-                },
-                "failure_issue_threshold": {
-                    "description": "The number of consecutive failed check-ins it takes before an issue is created.",
-                    "type": "integer"
-                },
-                "max_runtime": {
-                    "description": "The allowed duration in minutes that the monitor may be ` + "`" + `in_progress` + "`" + `\nfor before being considered failed due to timeout.",
-                    "type": "integer"
-                },
-                "recovery_threshold": {
-                    "description": "The number of consecutive OK check-ins it takes before an issue is resolved.",
-                    "type": "integer"
-                },
-                "schedule": {},
-                "timezone": {
-                    "description": "A tz database string representing the timezone which the monitor's execution schedule is in.\nSee: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
                     "type": "string"
                 }
             }
@@ -1242,39 +929,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "time.Duration": {
-            "type": "integer",
-            "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000
-            ],
-            "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute"
-            ]
         }
     }
 }`

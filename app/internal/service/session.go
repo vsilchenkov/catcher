@@ -6,7 +6,7 @@ import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/lib/caching"
 	"catcher/app/internal/models"
-	"catcher/app/internal/sentryhub"
+	sentryhub "catcher/app/internal/sentry/hub"
 	"catcher/pkg/logging"
 	"context"
 	"fmt"
@@ -68,17 +68,31 @@ func (s SessionService) End(projectId string, input models.Session) error {
 	}
 
 	if input.Started.IsZero() {
+		
 		// Заполним Started из кэша
 		cach, err := s.sessionCache(prj, input)
 		if err != nil {
-			s.logger.Warn("Cессия в кэше не найдена",
+
+			if err != ErrBadSesion {
+				s.logger.Warn("Ошибка получения сессии из кэша",
+					s.logger.Op(op),
+					s.logger.Str("did", input.Did),
+					s.logger.Str("sid", input.Sid),
+					s.logger.Err(err))
+				return errors.WithMessage(ErrBadSesion, op)
+			}
+
+			s.logger.Info("Cессия в кэше не найдена",
 				s.logger.Op(op),
 				s.logger.Str("did", input.Did),
 				s.logger.Str("sid", input.Sid),
 				s.logger.Err(err))
-			return errors.WithMessage(ErrBadSesion, op)
+
+			input.Started = time.Now().Add(-time.Second)
+
+		} else {
+			input.Started = cach.Started
 		}
-		input.Started = cach.Started
 	}
 
 	// Заполним Errors
@@ -103,7 +117,7 @@ func (s SessionService) StartEnd(prj config.Project, input models.Session, start
 
 	var err error
 
-	appCtx := models.NewAppContext(s.ctx, s.config, s.cacher, s.logger)
+	appCtx := models.NewAppContext(s.ctx, s.config, s.cacher, s.logger, nil)
 
 	hub, err := sentryhub.Get(prj, appCtx)
 	if err != nil {
@@ -113,11 +127,17 @@ func (s SessionService) StartEnd(prj config.Project, input models.Session, start
 		return ErrBadSentryHub
 	}
 
+	countErr := input.ErrorsEventer
+	if input.ErrorsReporter > 1 {
+		// один crashed автоматически прибавляет счетчик
+		countErr += input.ErrorsReporter - 1
+	}
+
 	sentrySession := sentryhub.SentrySession{
 		Sid:     uuidv5(input.Did + input.Sid),
 		Did:     input.Did,
 		Started: input.Started.Format(time.RFC3339),
-		Errors:  input.ErrorsReporter + input.ErrorsEventer,
+		Errors:  countErr,
 		Status:  sesionStatus(start, input),
 
 		Attrs: sentryhub.SessionAttrs{
@@ -149,13 +169,13 @@ func (s SessionService) sessionCache(prj config.Project, input models.Session) (
 	const op = "sessionCache"
 
 	key := input.Key(prj)
-	
+
 	var res *models.Session
 	found, err := s.cacher.Get(s.ctx, key, &res)
 	if err != nil {
 		return nil, errors.WithMessage(err, key)
 	} else if !found {
-		return nil, errors.WithMessage(ErrBadSesion, key)
+		return nil, ErrBadSesion
 	}
 
 	s.logger.Debug("Получена сессия из кэша",

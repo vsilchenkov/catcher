@@ -3,7 +3,7 @@ package sending
 import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/models"
-	"catcher/app/internal/sentryhub"
+	sentryhub "catcher/app/internal/sentry/hub"
 	"catcher/app/internal/service/sentry/eventing"
 	"context"
 	"log/slog"

@@ -2,7 +2,7 @@ package reporting
 
 import (
 	"catcher/app/internal/lib/ioimage"
-	"catcher/app/internal/sentryhub/normalize"
+	"catcher/app/internal/sentry/normalize"
 	"fmt"
 	"log/slog"
 
@@ -41,7 +41,7 @@ func (r Report) event() (*sentry.Event, error) {
 	if len(event.Exception) == 0 && event.Message == "" {
 		event.Message = emptyMessage
 	}
-	
+
 	return event, nil
 
 }

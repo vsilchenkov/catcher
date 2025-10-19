@@ -20,6 +20,7 @@ var errServerClosed = errors.New("http.ListenAndServe: http: Server closed")
 type Program struct {
 	models.AppContext
 	Srv     Srv
+	port    string
 	handler http.Handler
 }
 
@@ -28,31 +29,29 @@ type Srv interface {
 	Shutdown(ctx context.Context) error
 }
 
-type Handlers interface {
-}
-
-func NewProgram(srv Srv, handler http.Handler, appCtx models.AppContext) *Program {
+func NewProgram(srv Srv, handler http.Handler, port string, appCtx models.AppContext) *Program {
 	return &Program{
 		Srv:        srv,
 		handler:    handler,
-		AppContext: appCtx}
+		port:       port,		
+		AppContext: appCtx,
+}
 }
 
 func (p *Program) Start(s svc.Service) error {
 
 	// Запускаем в отдельной горутине, чтобы не блокировать Start
 	i := "Starting a web-server on port"
-	port := p.Config.Server.Port
 	version := p.Config.Version
 	build := p.Config.FixedFileInfo.FileVersion.Build
 
 	p.Logger.Info(i,
-		p.Logger.Str("port", port),
+		p.Logger.Str("port", p.port),
 		p.Logger.Str("version", version),
 		p.Logger.Str("build", fmt.Sprintf("%v", build)))
 
 	if p.Config.Log.OutputInFile {
-		fmt.Printf("%s: %s version=%s build=%v\n", i, port, version, build)
+		fmt.Printf("%s: %s version=%s build=%v\n", i, p.port, version, build)
 	}
 
 	go p.Run()
@@ -64,7 +63,6 @@ func (p *Program) Run() {
 	appCtx := p.AppContext
 
 	logger := logging.GetLogger()
-	port := appCtx.Config.ServerPort()
 
 	err := os.MkdirAll(filepath.Join(appCtx.Config.WorkingDir, models.DirWeb, models.DirTemp), 0755)
 	if err != nil {
@@ -73,7 +71,7 @@ func (p *Program) Run() {
 		os.Exit(1)
 	}
 
-	if err := p.Srv.Run(port, p.handler); err != nil && err.Error() != errServerClosed.Error() {
+	if err := p.Srv.Run(p.port, p.handler); err != nil && err.Error() != errServerClosed.Error() {
 		logger.Error("Error running server",
 			logger.Err(err))
 		os.Exit(1)

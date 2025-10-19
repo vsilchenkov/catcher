@@ -43,3 +43,10 @@ func (l *TestLogger) Str(key, value string) slog.Attr {
 		Value: slog.StringValue(value),
 	}
 }
+
+func (l *TestLogger) Any(key string, value any) slog.Attr {
+	return slog.Attr{
+		Key:   key,
+		Value: slog.AnyValue(value),
+	}
+}

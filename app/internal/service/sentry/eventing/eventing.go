@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	opSending       = "hub.CaptureEvent"
-	expirationCache = 5
+	opSending       = "hub.CaptureEvent"	
 )
 
 type Service struct {

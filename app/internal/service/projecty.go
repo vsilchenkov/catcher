@@ -35,7 +35,7 @@ func (p ProjectyService) SendEvent(projectId string, input models.Event) (*model
 		return nil, ErrBadProject
 	}
 
-	appCtx := models.NewAppContext(p.ctx, p.config, p.cacher, p.logger)
+	appCtx := models.NewAppContext(p.ctx, p.config, p.cacher, p.logger, nil)
 
 	repl := replicate.New(appCtx)
 	var svc replicate.ConvertEventer = repl

@@ -6,121 +6,6 @@ definitions:
         type: string
     type: object
   catcher_app_internal_models.Event:
-    properties:
-      breadcrumbs:
-        items:
-          $ref: '#/definitions/sentry.Breadcrumb'
-        type: array
-      check_in:
-        $ref: '#/definitions/sentry.CheckIn'
-      contexts:
-        additionalProperties:
-          $ref: '#/definitions/sentry.Context'
-        type: object
-      debug_meta:
-        $ref: '#/definitions/sentry.DebugMeta'
-      dist:
-        type: string
-      environment:
-        type: string
-      event_id:
-        type: string
-      exception:
-        $ref: '#/definitions/catcher_app_internal_models.Exception'
-      extra:
-        additionalProperties: true
-        type: object
-      fingerprint:
-        items:
-          type: string
-        type: array
-      items:
-        description: The fields below are only relevant for logs
-        items:
-          $ref: '#/definitions/sentry.Log'
-        type: array
-      level:
-        $ref: '#/definitions/sentry.Level'
-      logger:
-        type: string
-      message:
-        type: string
-      modules:
-        additionalProperties:
-          type: string
-        type: object
-      monitor_config:
-        $ref: '#/definitions/sentry.MonitorConfig'
-      platform:
-        type: string
-      release:
-        type: string
-      request: {}
-      sdk:
-        $ref: '#/definitions/sentry.SdkInfo'
-      server_name:
-        type: string
-      spans:
-        items:
-          $ref: '#/definitions/sentry.Span'
-        type: array
-      start_timestamp:
-        type: string
-      tags:
-        additionalProperties:
-          type: string
-        type: object
-      threads:
-        items:
-          $ref: '#/definitions/sentry.Thread'
-        type: array
-      timestamp:
-        type: string
-      transaction:
-        type: string
-      transaction_info:
-        $ref: '#/definitions/sentry.TransactionInfo'
-      type:
-        type: string
-      user:
-        $ref: '#/definitions/sentry.User'
-    type: object
-  catcher_app_internal_models.Exception:
-    properties:
-      values:
-        items:
-          $ref: '#/definitions/catcher_app_internal_models.ExceptionValue'
-        type: array
-    type: object
-  catcher_app_internal_models.ExceptionValue:
-    properties:
-      stacktrace:
-        $ref: '#/definitions/catcher_app_internal_models.Stacktrace'
-      type:
-        type: string
-      value:
-        type: string
-    type: object
-  catcher_app_internal_models.Frame:
-    properties:
-      abs_path:
-        type: string
-      context_line:
-        type: string
-      filename:
-        type: string
-      function:
-        type: string
-      in_app:
-        type: boolean
-      lineno:
-        type: integer
-      module:
-        type: string
-      module_abs:
-        type: string
-      stack_start:
-        type: boolean
     type: object
   catcher_app_internal_models.RegistryInfo:
     properties:
@@ -200,33 +85,6 @@ definitions:
     - release
     - sid
     type: object
-  catcher_app_internal_models.Stacktrace:
-    properties:
-      frames:
-        items:
-          $ref: '#/definitions/catcher_app_internal_models.Frame'
-        type: array
-    type: object
-  sentry.AttrType:
-    enum:
-    - ""
-    - boolean
-    - integer
-    - double
-    - string
-    type: string
-    x-enum-varnames:
-    - AttributeInvalid
-    - AttributeBool
-    - AttributeInt
-    - AttributeFloat
-    - AttributeString
-  sentry.Attribute:
-    properties:
-      type:
-        $ref: '#/definitions/sentry.AttrType'
-      value: {}
-    type: object
   sentry.Breadcrumb:
     properties:
       category:
@@ -242,24 +100,6 @@ definitions:
         type: string
       type:
         type: string
-    type: object
-  sentry.CheckIn:
-    properties:
-      check_in_id:
-        description: Check-In ID (unique and client generated)
-        type: string
-      duration:
-        allOf:
-        - $ref: '#/definitions/time.Duration'
-        description: The duration of the check-in. Will only take effect if the status
-          is ok or error.
-      monitor_slug:
-        description: The distinct slug of the monitor.
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/sentry.CheckInStatus'
-        description: The status of the check-in.
     type: object
   sentry.CheckInStatus:
     enum:
@@ -413,41 +253,6 @@ definitions:
     - LevelWarning
     - LevelError
     - LevelFatal
-  sentry.Log:
-    properties:
-      attributes:
-        additionalProperties:
-          $ref: '#/definitions/sentry.Attribute'
-        type: object
-      body:
-        type: string
-      level:
-        $ref: '#/definitions/sentry.LogLevel'
-      severity_number:
-        type: integer
-      timestamp:
-        type: string
-      trace_id:
-        items:
-          type: integer
-        type: array
-    type: object
-  sentry.LogLevel:
-    enum:
-    - trace
-    - debug
-    - info
-    - warn
-    - error
-    - fatal
-    type: string
-    x-enum-varnames:
-    - LogLevelTrace
-    - LogLevelDebug
-    - LogLevelInfo
-    - LogLevelWarn
-    - LogLevelError
-    - LogLevelFatal
   sentry.Mechanism:
     properties:
       data:
@@ -468,33 +273,6 @@ definitions:
       source:
         type: string
       type:
-        type: string
-    type: object
-  sentry.MonitorConfig:
-    properties:
-      checkin_margin:
-        description: |-
-          The allowed margin of minutes after the expected check-in time that
-          the monitor will not be considered missed for.
-        type: integer
-      failure_issue_threshold:
-        description: The number of consecutive failed check-ins it takes before an
-          issue is created.
-        type: integer
-      max_runtime:
-        description: |-
-          The allowed duration in minutes that the monitor may be `in_progress`
-          for before being considered failed due to timeout.
-        type: integer
-      recovery_threshold:
-        description: The number of consecutive OK check-ins it takes before an issue
-          is resolved.
-        type: integer
-      schedule: {}
-      timezone:
-        description: |-
-          A tz database string representing the timezone which the monitor's execution schedule is in.
-          See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
         type: string
     type: object
   sentry.Request:
@@ -680,36 +458,6 @@ definitions:
       username:
         type: string
     type: object
-  time.Duration:
-    enum:
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    type: integer
-    x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
 host: localhost:8000
 info:
   contact: {}

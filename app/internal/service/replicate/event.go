@@ -4,7 +4,7 @@ import (
 	"catcher/app/internal/config"
 	"catcher/app/internal/lib/gitbsl"
 	"catcher/app/internal/models"
-	"catcher/app/internal/sentryhub/normalize"
+	"catcher/app/internal/sentry/normalize"
 	"catcher/app/internal/service/sentry/stacking"
 	"time"
 

@@ -1,0 +1,100 @@
+Server:
+  Port: "8000"
+
+Registry:
+  UserMessage: "Разработчики получат информацию об ошибке автоматически." # Текст, который будет показан пользователю в качестве дополнительной информации об ошибке
+  DumpType: 1   # Тип дампа, который нужно приложить к отчету об ошибке (аналогичен значению атрибута type элемента dump файла logcfg.xml)
+  Timeout: 20
+  
+Projects:
+  - Name: ""
+    ID: ""
+    Service:
+      Use: true
+      Url: ""
+      IimeOut: 20 #Минут
+      Credintials:
+        UserName: ""
+        Password: ""
+      Cache:
+        Use: true
+        Expiration: 60 #Минут
+      Exeptions:
+        Use: true
+        Cache:
+          Use: true
+          Expiration: 1440 #24 часа
+    Session:
+      Use: true
+      Duration: 10080 #Минут 
+    Sentry:
+      Dsn: ""
+      IimeOut: 5 #Секунд
+      Environment: ""
+      Platform: ""
+      ContextAround:
+        Use: true
+        Quantity: 6
+        Cache:
+          Use: true
+          Expiration: 1440 #24 часа
+      Attachments:
+        Use: true
+        Сompress:
+          Use: true
+          Percent: 50
+      SendingCache:
+          Use: true
+          Expiration: 10 #Минут
+    Git:
+      Use: true
+      Url: ""
+      Path: ""
+      Token: ""
+      Branch: "master"
+      SourceCodeRoot: "config" 
+    Extentions:
+      - ""
+      - ""
+
+Redis:
+  Use: true
+  Addr: ""
+  DB: 2
+  Credintials:
+    UserName: ""
+    Password: ""
+
+SentryMetrics: 
+  Port: 9790
+  Interval: 180 #Секунд
+  Sentry:
+    Url: ""
+    Org: ""
+    Token: ""
+    Timeout: 60 
+  Metrics:
+    - Use: true
+      Name: "Sessions"
+      Projects:
+      - Id: "2"
+        Name: ""
+      - Id: "12"
+        Name: ""  
+
+Log:
+  Debug: false
+  Level: 5            # Уровень логирования от 2 до 5, где 2 - ошибка, 3 - предупреждение, 4 - информация, 5 - дебаг
+  OutputInFile: true  # включить логирование в каталог LogDir
+  Dir: "logs"         # каталог логов
+  
+DeleteTempFiles: false # Удалать файлы из web/temp
+
+Sentry:
+  Use: true # Включить sentry для отлова внутренних ошибок
+  Dsn: ""
+  Environment: "Production"
+  AttachStacktrace: true
+  TracesSampleRate: 1.0
+  EnableTracing: true
+  Debug: true
